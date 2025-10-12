@@ -1,0 +1,26 @@
+---
+import type { ApplicationContextProps } from "@/types";
+interface Props extends ApplicationContextProps {};
+
+const { type, name, aggregateRating, offers }: Props = Astro.props;
+---
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify({
+  "@context": "https://schema.org/",
+  "@type": type,
+  "name": name,
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": aggregateRating.ratingValue,
+    "reviewCount": aggregateRating.reviewCount,
+    "bestRating": "5",
+    "worstRating": "1",
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": offers.priceCurrency,
+    "price": offers.price,
+    "priceValidUntil": offers.priceValidUntil
+  }
+}, null, 2)}>
+</script>

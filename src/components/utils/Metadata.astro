@@ -1,0 +1,94 @@
+---
+import type { MetadataProps } from "@/types";
+import { removeDuplicates } from "@/lib/utils";
+interface Props extends MetadataProps {}
+import {
+	siteData,
+	twitterMetaData as twMetaData,
+	icons,
+} from "@/lib/data/siteData";
+const {
+	url = Astro.url,
+	title,
+	description,
+	robots = siteData.robotsDefault,
+	keywords,
+	ogTitle,
+	ogImage,
+	author,
+	metadataColor,
+	metadataIcons,
+	titleSuffix = true,
+}: Props = Astro.props;
+
+let siteTitle = title
+	? `${title}${titleSuffix ? ` - ${siteData.name}` : ""}`
+	: siteData.name;
+
+// combines keywords from the page with the site keywords
+let siteKeywords = keywords
+	? removeDuplicates(keywords, siteData.keywords)
+	: siteData.keywords;
+---
+
+<meta
+	name="theme-color"
+	media="(prefers-color-scheme: light)"
+	content={metadataColor?.light || siteData.metadata_color.light}
+/>
+<meta
+	name="theme-color"
+	media="(prefers-color-scheme: dark)"
+	content={metadataColor?.dark || siteData.metadata_color.dark}
+/>
+
+<title>{siteTitle}</title>
+<meta name="description" content={description || siteData.description} />
+<meta name="author" content={author?.name || siteData.author.name} />
+<link rel="author" href={author?.url || siteData.author.url} />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="keywords" content={siteKeywords.join(", ")} />
+<meta name="creator" content={author?.name || siteData.author.name} />
+<meta name="publisher" content={siteData.publisher} />
+<meta name="robots" content={robots} />
+<link rel="canonical" href={url} />
+
+<!-- og metadata -->
+<meta property="og:title" content={ogTitle || siteTitle} />
+<meta property="og:description" content={description || siteData.description} />
+<meta property="og:url" content={url} />
+<meta property="og:site_name" content={siteData.baseUrl} />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image" content={ogImage?.src || siteData.ogImage.src} />
+<meta property="og:image:url" content={ogImage?.src || siteData.ogImage.src} />
+<meta
+	property="og:image:width"
+	content={ogImage?.width?.toString() || siteData.ogImage.width?.toString()}
+/>
+<meta
+	property="og:image:height"
+	content={ogImage?.height?.toString() || siteData.ogImage.height?.toString()}
+/>
+<meta property="og:image:alt" content={ogImage?.alt || siteData.ogImage.alt} />
+<meta property="og:type" content="website" />
+
+<!-- tw metadata -->
+<meta name="twitter:card" content={twMetaData.card} />
+<meta name="twitter:site" content={`@${siteData.publisher}`} />
+<meta name="twitter:creator" content={author?.name || twMetaData.creator} />
+<meta name="twitter:title" content={title || twMetaData.title} />
+<meta
+	name="twitter:description"
+	content={description || twMetaData.description}
+/>
+<meta name="twitter:image" content={ogImage?.src || twMetaData.image} />
+<meta name="twitter:image:alt" content={ogImage?.alt || twMetaData.title} />
+<meta name="twitter:domain" content={url} />
+
+<!-- icons -->
+<link rel="shortcut icon" href={metadataIcons?.shortcut || icons.shortcut} />
+<link rel="icon" href={metadataIcons?.icon || icons.icon} />
+<link rel="apple-touch-icon" href={metadataIcons?.apple || icons.apple} />
+
+<link rel="sitemap" href="/sitemap-index.xml" />
+<meta name="generator" content={Astro.generator} />

@@ -1,0 +1,96 @@
+---
+import "@/styles/global.css";
+// custom fonts https://docs.astro.build/en/guides/fonts/
+// you can change the default font by changing --font-sans in global.css
+
+// https://docs.astro.build/en/guides/view-transitions/#trigger-navigation
+import { ClientRouter } from "astro:transitions";
+
+import type { MetadataProps, ApplicationContextProps } from "@/types";
+// head componets
+import Metadata from "@/components/utils/Metadata.astro";
+import ApplicationContext from "@/components/utils/ApplicationContext.astro";
+// page components
+import PageLoader from "@/components/utils/PageLoader.astro";
+import { ModeToggle } from "@/components/utils/ModeToggle";
+import { ScrollToTopButton } from "@/components/utils/TopButton";
+
+interface Props extends MetadataProps {
+	pageLoader?: boolean;
+	applicationContext?: ApplicationContextProps;
+}
+const { pageLoader = true, applicationContext }: Props = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<!-- https://react-scan.com/ -->
+		<!-- <script src="https://unpkg.com/react-scan/dist/auto.global.js"></script> -->
+		<!-- seo and open graph metadata -->
+		<Metadata {...Astro.props} />
+		<!-- application context json (for product seo) -->
+		{applicationContext && <ApplicationContext {...applicationContext} />}
+		<!-- view transitions router -->
+		<ClientRouter />
+		<!-- Theme script, in head to avoid light/dark mode flickering on page change -->
+		<script is:inline>
+			const getTheme = () => {
+				if (
+					typeof localStorage !== "undefined" &&
+					localStorage.getItem("theme")
+				) {
+					return localStorage.getItem("theme");
+				}
+				return "system";
+			};
+
+			const applyTheme = (theme) => {
+				const isDark =
+					theme === "dark" ||
+					(theme === "system" &&
+						window.matchMedia("(prefers-color-scheme: dark)").matches);
+				document.documentElement.classList[isDark ? "add" : "remove"]("dark");
+			};
+
+			const theme = getTheme();
+			applyTheme(theme);
+
+			document.addEventListener("astro:after-swap", () => {
+				const theme = getTheme();
+				applyTheme(theme);
+			});
+		</script>
+	</head>
+	<body>
+		<ScrollToTopButton client:load className="fixed right-4 bottom-4 z-50" />
+		<main>
+			<slot />
+		</main>
+		<ModeToggle
+			client:load
+			className="fixed bottom-2 left-2 z-50"
+			iconClassName="size-3"
+		/>
+		{pageLoader && <PageLoader />}
+	</body>
+</html>
+
+<style>
+	@keyframes bump {
+		0% {
+			opacity: 0;
+			transform: scale(1) translateX(200px);
+		}
+		50% {
+			opacity: 0.5;
+			transform: scale(1.1);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1) translateX(0);
+		}
+	}
+</style>

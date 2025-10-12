@@ -1,0 +1,47 @@
+---
+import { cn } from "@/lib/utils";
+import { Term } from "@/components/Term.tsx";
+import { Button } from "@/components/ui/button";
+import Img from "@/components/utils/Img.astro";
+import img1 from "@/assets/test/img1.jpg";
+
+import { Icons } from "@/components/utils/Icons";
+type Props = {
+	className?: string;
+};
+const { className, ...props }: Props = Astro.props;
+---
+
+<div
+	class={cn(
+		"container mt-10 flex flex-col items-center justify-center gap-4",
+		className
+	)}
+	{...props}
+>
+	<Img
+		src={img1}
+		alt={`Random image 1`}
+		width={350}
+		height={500}
+		className="rounded-md"
+		useAstroImage={true}
+		transition:name="wobble"
+	/>
+	<Button
+		href="/test"
+		className="mb-10 w-full max-w-[350px]"
+		variant={"secondary"}>Test Page</Button
+	>
+	<Term client:load />
+	<!-- <h1 class="text-[clamp(1rem,0.774rem+1.935vw,3rem)]">Hello World</h1> -->
+	<div class="fixed right-4 bottom-4">
+		<Button
+			variant={"secondary"}
+			href="https://github.com/ardzero/bunestro"
+			target="_blank"
+		>
+			<Icons.github /> GitHub</Button
+		>
+	</div>
+</div>

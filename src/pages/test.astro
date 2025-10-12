@@ -1,0 +1,36 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { Button } from "@/components/ui/button";
+import Img from "@/components/utils/Img.astro";
+import img1 from "@/assets/test/img1.jpg";
+---
+
+<Layout>
+	<section>
+		<Button href="/" className="mx-auto mt-10 block w-fit text-center">
+			home
+		</Button>
+		<Img
+			src={img1}
+			alt={`Random image 1`}
+			width={350}
+			height={500}
+			className="mx-auto mt-10 rounded-md"
+			useAstroImage={true}
+			transition:name="wobble"
+		/>
+		<div class="mb-4 flex flex-wrap justify-center gap-4 p-6">
+			{
+				Array.from({ length: 550 }).map((_, index) => (
+					<Img
+						src={`https://picsum.photos/800/600?random=${index}`}
+						alt={`Random image ${index + 1}`}
+						width={300}
+						height={500}
+						className="rounded-md"
+					/>
+				))
+			}
+		</div>
+	</section>
+</Layout>
