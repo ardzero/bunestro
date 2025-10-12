@@ -1,9 +1,12 @@
+// https://docs.astro.build/en/guides/images/#svgcomponent-type
+import type { SvgComponent } from "astro/types";
 import type { LucideIcon } from "lucide-react";
 // import type * as React from 'react';
+
 export type TLink = {
 	label: string;
 	href: string;
-	Icon?: LucideIcon | React.ComponentType<React.HTMLAttributes<SVGElement>>;
+	Icon?: LucideIcon | React.ComponentType<React.HTMLAttributes<SVGElement>> | SvgComponent;
 	external?: boolean;
 };
 
@@ -13,7 +16,7 @@ export type Author = {
 };
 export type Trobots = "noindex, nofollow" | "index, follow";
 export type TImage = {
-	src: string;
+	src: string | SvgComponent;
 	alt: string;
 	width?: number;
 	height?: number;
