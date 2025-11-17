@@ -9,12 +9,23 @@ export function cn(...inputs: ClassValue[]) {
 export const isSSR = typeof window === "undefined";
 
 // returns the base url with https:// if it doesn't have it
-export const getBaseUrl = () => {
-	const url = siteData.baseUrl;
-	if (/^https?:\/\//.test(url)) {
-		return url;
+export const getBaseUrl = (path?: string): string => {
+	let url = siteData.baseUrl;
+	const hasProtocol = /^https?:\/\//.test(url);
+
+	// Remove trailing slash if it exists
+	if (url.endsWith("/")) url = url.slice(0, -1);
+
+	// Add protocol if missing
+	if (!hasProtocol) url = `https://${url}`;
+
+	// if path is passed, add it to the base url
+	if (path) {
+		// Remove leading slash from path to avoid double slashes
+		const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+		url = `${url}/${cleanPath}`;
 	}
-	return `https://${url}`;
+	return url;
 };
 
 // returns a promise that resolves after a given number of milliseconds
