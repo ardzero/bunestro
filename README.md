@@ -2,7 +2,7 @@
 
 # Bunestro
 
-An Astro app with Tailwind CSS, React, Shadcn, and Tailwind-motion setup along with built-in utilities. [Live deployment](https://bunestro.ardastroid.com/)
+An opinionated Astro starter template setup with Tailwind CSS, React, Shadcn, and Tailwind-motion, along with built-in utilities. [Live deployment](https://bunestro.ardastroid.com/)
 Repo: [Github Repo](https://github.com/ardzero/bunestro)
 
 ## Getting Started
