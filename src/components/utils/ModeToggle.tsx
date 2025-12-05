@@ -10,6 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+// "flex flex-col items-center justify-between [&:has([data-state=checked])]:rounded-sm  p-2 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:bg-accent"
+const buttonClassName = "flex flex-col items-center justify-between  p-2 hover:text-accent-foreground [&:has([data-state=checked])]:bg-accent cursor-pointer"
 export function ModeToggle({
 	className,
 	iconClassName,
@@ -40,13 +42,14 @@ export function ModeToggle({
 		localStorage.setItem("theme", theme);
 	}, [theme]);
 
+	
 	return (
 		<TooltipProvider>
 			<RadioGroup
 				value={theme}
 				defaultValue="system"
 				className={cn(
-					"flex gap-0 rounded-3xl border bg-background/65 backdrop-blur-2xl",
+					"flex gap-0 rounded-md bg-popover overflow-hidden backdrop-blur-2xl",
 					className,
 				)}
 			>
@@ -54,7 +57,7 @@ export function ModeToggle({
 					<TooltipTrigger asChild>
 						<Label
 							htmlFor="light"
-							className="flex flex-col items-center justify-between rounded-full bg-popover p-2 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:bg-accent"
+							className={buttonClassName}
 							onClick={() => setThemeState("light")}
 						>
 							<RadioGroupItem
@@ -75,8 +78,8 @@ export function ModeToggle({
 					<TooltipTrigger asChild>
 						<Label
 							htmlFor="dark"
-							className="flex flex-col items-center justify-between rounded-full bg-popover p-2 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:bg-accent"
-							onClick={() => setThemeState("dark")}
+								className={buttonClassName}
+								onClick={() => setThemeState("dark")}
 						>
 							<RadioGroupItem
 								value="dark"
@@ -96,7 +99,7 @@ export function ModeToggle({
 					<TooltipTrigger asChild>
 						<Label
 							htmlFor="system"
-							className="flex flex-col items-center justify-between rounded-full bg-popover p-2 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:bg-accent"
+							className={buttonClassName}
 							onClick={() => setThemeState("system")}
 						>
 							<RadioGroupItem
