@@ -10,8 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-// "flex flex-col items-center justify-between [&:has([data-state=checked])]:rounded-sm  p-2 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:bg-accent"
-const buttonClassName = "flex flex-col items-center justify-between  p-2 hover:text-accent-foreground [&:has([data-state=checked])]:bg-accent cursor-pointer"
+const buttonClassName = "relative z-10 flex flex-col items-center justify-between p-2 hover:text-accent-foreground cursor-pointer transition-colors";
+
 export function ModeToggle({
 	className,
 	iconClassName,
@@ -24,7 +24,6 @@ export function ModeToggle({
 	);
 
 	React.useEffect(() => {
-		// Read from localStorage on mount to sync with stored preference
 		const storedTheme = localStorage.getItem("theme");
 		if (storedTheme === "light" || storedTheme === "dark") {
 			setThemeState(storedTheme);
@@ -42,17 +41,35 @@ export function ModeToggle({
 		localStorage.setItem("theme", theme);
 	}, [theme]);
 
-	
+	// Calculate position for sliding background
+	const getPosition = () => {
+		switch (theme) {
+			case "light":
+				return "0%";
+			case "dark":
+				return "100%";
+			case "system":
+				return "200%";
+			default:
+				return "200%";
+		}
+	};
+
 	return (
 		<TooltipProvider>
 			<RadioGroup
 				value={theme}
 				defaultValue="system"
 				className={cn(
-					"flex gap-0 rounded-md bg-popover overflow-hidden backdrop-blur-2xl",
+					"relative flex gap-0 rounded-md bg-popover overflow-hidden backdrop-blur-2xl",
 					className,
 				)}
 			>
+				{/* Animated background indicator */}
+				<div
+					className="absolute inset-y-0 w-[33.333%] bg-foreground/10 transition-transform duration-300 ease-in-out"
+					style={{ transform: `translateX(${getPosition()})` }}
+				/>
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Label
@@ -78,8 +95,8 @@ export function ModeToggle({
 					<TooltipTrigger asChild>
 						<Label
 							htmlFor="dark"
-								className={buttonClassName}
-								onClick={() => setThemeState("dark")}
+							className={buttonClassName}
+							onClick={() => setThemeState("dark")}
 						>
 							<RadioGroupItem
 								value="dark"
