@@ -158,6 +158,34 @@ export function getOS() {
 	return os;
 }
 
+// get screen size boolean
+export function isScreenSizeLessThan(screenSize: number = 800) {
+	if (typeof window === "undefined") return false;
+	return window.innerWidth < screenSize;
+}
+
+// hasn't been tested yet
+// export function getBrowser() {
+// 	if (typeof window === "undefined") return null;
+// 	const userAgent = window.navigator.userAgent;
+
+// 	if (/edg/i.test(userAgent)) {
+// 		return "Edge";
+// 	} else if (/chrome|crios/i.test(userAgent) && !/edge|edg|opr|opera/i.test(userAgent)) {
+// 		return "Chrome";
+// 	} else if (/firefox|fxios/i.test(userAgent)) {
+// 		return "Firefox";
+// 	} else if (/safari/i.test(userAgent) && !/chrome|crios|opr|edg/i.test(userAgent)) {
+// 		return "Safari";
+// 	} else if (/opr|opera/i.test(userAgent)) {
+// 		return "Opera";
+// 	} else if (/msie|trident/i.test(userAgent)) {
+// 		return "Internet Explorer";
+// 	}
+// 	return "Unknown";
+// }
+
+
 // simple hashing algorithm (not secure for password hashing)
 export function murmurhash(key: string) {
 	const remainder = key.length & 3;
