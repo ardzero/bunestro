@@ -10,7 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-const buttonClassName = "relative z-10 flex flex-col items-center justify-between p-2 hover:text-accent-foreground cursor-pointer transition-colors";
+const buttonClassName =
+	"relative z-10 flex flex-col items-center justify-between p-2 hover:text-accent-foreground cursor-pointer transition-colors";
 
 export function ModeToggle({
 	className,
@@ -38,6 +39,7 @@ export function ModeToggle({
 			(theme === "system" &&
 				window.matchMedia("(prefers-color-scheme: dark)").matches);
 		document.documentElement.classList[isDark ? "add" : "remove"]("dark");
+		document.documentElement.style.colorScheme = isDark ? "dark" : "light";
 		localStorage.setItem("theme", theme);
 	}, [theme]);
 
@@ -61,7 +63,7 @@ export function ModeToggle({
 				value={theme}
 				defaultValue="system"
 				className={cn(
-					"relative flex gap-0 rounded-md bg-popover overflow-hidden backdrop-blur-2xl",
+					"relative flex gap-0 overflow-hidden rounded-md bg-popover backdrop-blur-2xl",
 					className,
 				)}
 			>
