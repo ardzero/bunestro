@@ -6,6 +6,7 @@ dist/
 
 # dependencies
 node_modules/
+create-bunestro/node_modules/
 
 # logs
 npm-debug.log*
