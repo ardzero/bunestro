@@ -157,6 +157,16 @@ async function main(): Promise<void> {
     // Handle current directory
     if (projectName === ".") {
         useCurrentDir = true;
+
+        // Check if current directory is empty
+        const { readdirSync } = await import("fs");
+        const files = readdirSync(process.cwd());
+        const visibleFiles = files.filter(file => !file.startsWith('.'));
+
+        if (visibleFiles.length > 0) {
+            p.cancel("Current directory is not empty. Please use an empty directory or specify a new project name.");
+            process.exit(1);
+        }
     } else {
         // Strip ./ prefix if present
         if (projectName.startsWith("./")) {

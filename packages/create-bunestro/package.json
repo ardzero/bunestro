@@ -2,7 +2,7 @@
 	"name": "@ardly/bunestro",
 	"description": "CLI tool to create Astro project using Bunestro template",
 	"author": "Ard Astroid <ardastroid@gmail.com>",
-	"version": "0.3.0",
+	"version": "0.4.0",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
