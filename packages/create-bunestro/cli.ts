@@ -64,6 +64,19 @@ async function promptForProjectName(): Promise<string> {
     return response as string;
 }
 
+function getProjectCwd(useCurrentDir: boolean, projectName: string): string {
+    return useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName);
+}
+
+async function removeDirectory(path: string): Promise<void> {
+    const isWindows = process.platform === "win32";
+    if (isWindows) {
+        await execa("cmd", ["/c", "rmdir", "/s", "/q", path], { shell: true });
+    } else {
+        await execa("rm", ["-rf", path], { shell: true });
+    }
+}
+
 function showHelp(): void {
     console.clear();
     p.intro(color.bgCyan(color.black(" create-bunestro ")));
@@ -231,17 +244,10 @@ async function main(): Promise<void> {
     // Remove .git directory and CLI-related folders
     s.start("Cleaning up");
     try {
-        const isWindows = process.platform === "win32";
         const targetDir = useCurrentDir ? tempDir : projectName;
 
         // Remove .git directory
-        if (isWindows) {
-            await execa("cmd", ["/c", "rmdir", "/s", "/q", `${targetDir}\\.git`], {
-                shell: true,
-            });
-        } else {
-            await execa("rm", ["-rf", `${targetDir}/.git`], { shell: true });
-        }
+        await removeDirectory(`${targetDir}/.git`);
 
         // Remove CLI-related folders if they exist
         const foldersToRemove = [
@@ -253,20 +259,14 @@ async function main(): Promise<void> {
         for (const folder of foldersToRemove) {
             const folderPath = resolve(process.cwd(), targetDir, folder);
             if (existsSync(folderPath)) {
-                if (isWindows) {
-                    await execa("cmd", ["/c", "rmdir", "/s", "/q", folderPath], {
-                        shell: true,
-                    });
-                } else {
-                    await execa("rm", ["-rf", folderPath], { shell: true });
-                }
+                await removeDirectory(folderPath);
             }
         }
 
         // If using current directory, move files from temp to current
         if (useCurrentDir) {
-            const { copyFile, mkdir, readdir, stat } = await import("fs/promises");
-            const { dirname, relative, join } = await import("path");
+            const { copyFile, mkdir, readdir } = await import("fs/promises");
+            const { dirname, join } = await import("path");
 
             async function copyDir(src: string, dest: string): Promise<void> {
                 const entries = await readdir(src, { withFileTypes: true });
@@ -288,13 +288,7 @@ async function main(): Promise<void> {
             await copyDir(tempDir, process.cwd());
 
             // Remove temp directory
-            if (isWindows) {
-                await execa("cmd", ["/c", "rmdir", "/s", "/q", tempDir], {
-                    shell: true,
-                });
-            } else {
-                await execa("rm", ["-rf", tempDir], { shell: true });
-            }
+            await removeDirectory(tempDir);
         }
 
         s.stop("Cleaned up");
@@ -332,7 +326,7 @@ async function main(): Promise<void> {
         s.start("Installing dependencies");
         try {
             await execa(packageManager, ["install"], {
-                cwd: useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName),
+                cwd: getProjectCwd(useCurrentDir, projectName),
                 stdio: "pipe",
             });
             s.stop("Dependencies installed");
@@ -406,7 +400,7 @@ async function main(): Promise<void> {
     if (shouldInitGit) {
         s.start("Initializing git repository");
         try {
-            const gitCwd = useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName);
+            const gitCwd = getProjectCwd(useCurrentDir, projectName);
             await execa("git", ["init"], { cwd: gitCwd });
             await execa("git", ["add", "."], { cwd: gitCwd });
             await execa("git", ["commit", "-m", "Initial commit"], { cwd: gitCwd });
@@ -479,7 +473,7 @@ async function main(): Promise<void> {
                     s.start(shouldPush ? "Connecting and pushing to remote repository" : "Adding remote repository");
 
                     try {
-                        const gitCwd = useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName);
+                        const gitCwd = getProjectCwd(useCurrentDir, projectName);
                         await execa("git", ["remote", "add", "origin", remoteUrl], { cwd: gitCwd });
                         await execa("git", ["branch", "-M", "main"], { cwd: gitCwd });
 
@@ -553,7 +547,7 @@ async function main(): Promise<void> {
 
         try {
             await execa(editor, ["."], {
-                cwd: useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName),
+                cwd: getProjectCwd(useCurrentDir, projectName),
             });
             p.log.success(`Opened in ${editorName}`);
         } catch (error: any) {
@@ -573,16 +567,10 @@ async function main(): Promise<void> {
 
     // Success message
     let nextSteps = "";
-    if (!useCurrentDir) {
-        nextSteps += `cd ${projectName}\n`;
-    }
-    if (!shouldInstall) {
-        nextSteps += `${packageManager} install\n`;
-    }
+    if (!useCurrentDir) nextSteps += `cd ${projectName}\n`;
+    if (!shouldInstall) nextSteps += `${packageManager} install\n`;
     nextSteps += `${packageManager} run dev`;
-
     p.note(nextSteps, "Next steps");
-
     p.outro(color.green("All done! 🎉"));
 }
 
