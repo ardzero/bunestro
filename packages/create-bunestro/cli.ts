@@ -4,10 +4,24 @@ import * as p from "@clack/prompts";
 import color from "picocolors";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { existsSync } from "fs";
-import { resolve } from "path";
+import { existsSync, readFileSync } from "fs";
+import { resolve, dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const REPO_URL = "https://github.com/ardzero/bunestro.git";
+
+// Get package version
+function getVersion(): string {
+    try {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const packageJsonPath = join(__dirname, "../package.json");
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+        return packageJson.version;
+    } catch {
+        return "0.1.0";
+    }
+}
 
 interface CliArguments {
     _: (string | number)[];
@@ -16,21 +30,46 @@ interface CliArguments {
     install?: boolean;
     cursor?: boolean;
     vscode?: boolean;
+    h?: boolean;
+    v?: boolean;
 }
 
 type PackageManager = "bun" | "pnpm" | "yarn" | "npm";
 type EditorChoice = "cursor" | "vscode" | "skip" | null;
 
+function showHelp(): void {
+    console.clear();
+    p.intro(color.bgCyan(color.black(" create-bunestro ")));
+
+    console.log(color.bold("\nUsage:"));
+    console.log(`  ${color.cyan("bunx @ardly/bunestro")} ${color.dim("[project-name] [options]")}`);
+
+    p.note(
+        `${color.cyan("bunx @ardly/bunestro my-app")}\n  Create a new project with interactive prompts\n\n` +
+        `${color.cyan("bunx @ardly/bunestro my-app -y")}\n  Create with all defaults (install deps, init git)\n\n` +
+        `${color.cyan("bunx @ardly/bunestro my-app --cursor --git")}\n  Create and open in Cursor with git initialized\n\n` +
+        `${color.cyan("bunx @ardly/bunestro my-app --no-install")}\n  Create without installing dependencies`,
+        "Examples"
+    );
+
+    console.log(color.bold("\nOptions:"));
+    console.log(`  ${color.cyan("-y, --yes")}              Skip all prompts and use defaults`);
+    console.log(`  ${color.cyan("--git")}                  Initialize git repository`);
+    console.log(`  ${color.cyan("--no-git")}               Skip git initialization`);
+    console.log(`  ${color.cyan("--install")}              Install dependencies`);
+    console.log(`  ${color.cyan("--no-install")}           Skip dependency installation`);
+    console.log(`  ${color.cyan("--cursor")}               Open project in Cursor after creation`);
+    console.log(`  ${color.cyan("--vscode")}               Open project in VS Code after creation`);
+    console.log(`  ${color.cyan("-h, --help")}             Show this help message`);
+    console.log(`  ${color.cyan("-v, --version")}          Show version number`);
+
+    p.outro(`For more info: ${color.underline(color.cyan("https://github.com/ardzero/bunestro"))}`);
+}
+
 // Parse CLI arguments
 const argv = yargs(hideBin(process.argv))
-    .usage("Usage: $0 [project-name] [options]")
-    .example("$0 my-app", "Create a new project with interactive prompts")
-    .example("$0 my-app -y", "Create with all defaults (install deps, init git)")
-    .example(
-        "$0 my-app --cursor --git",
-        "Create and open in Cursor with git initialized",
-    )
-    .example("$0 my-app --no-install", "Create without installing dependencies")
+    .help(false)
+    .version(false)
     .option("y", {
         type: "boolean",
         description: "Skip all prompts and use defaults (install deps, init git)",
@@ -54,10 +93,32 @@ const argv = yargs(hideBin(process.argv))
         type: "boolean",
         description: "Open project in VS Code after creation",
     })
-    .alias("h", "help")
-    .alias("v", "version")
-    .epilogue("For more information, visit: https://github.com/ardzero/bunestro")
+    .option("h", {
+        alias: "help",
+        type: "boolean",
+        description: "Show help",
+    })
+    .option("v", {
+        alias: "version",
+        type: "boolean",
+        description: "Show version",
+    })
     .parse() as CliArguments;
+
+// Handle help flag
+if (argv.h) {
+    showHelp();
+    process.exit(0);
+}
+
+// Handle version flag
+if (argv.v) {
+    console.clear();
+    p.intro(color.bgCyan(color.black(" create-bunestro ")));
+    console.log(`\n  ${color.bold("Version:")} ${color.cyan(getVersion())}`);
+    p.outro(color.dim("https://github.com/ardzero/bunestro"));
+    process.exit(0);
+}
 
 async function main(): Promise<void> {
     console.clear();
@@ -75,8 +136,8 @@ async function main(): Promise<void> {
             validate: (value: string) => {
                 if (!value) return "Project name is required";
                 if (value === ".") return; // Allow current directory
-                if (!/^\.\/[a-z0-9-]+$/.test(value) && !/^[a-z0-9-]+$/.test(value)) {
-                    return "Project name must contain only lowercase letters, numbers, and hyphens";
+                if (!/^\.\/[a-zA-Z0-9-]+$/.test(value) && !/^[a-zA-Z0-9-]+$/.test(value)) {
+                    return "Project name must contain only letters, numbers, and hyphens";
                 }
                 const dirName = value.startsWith("./") ? value.slice(2) : value;
                 if (existsSync(resolve(process.cwd(), dirName))) {
@@ -103,8 +164,8 @@ async function main(): Promise<void> {
         }
 
         // Validate project name
-        if (!/^[a-z0-9-]+$/.test(projectName)) {
-            p.cancel("Project name must contain only lowercase letters, numbers, and hyphens");
+        if (!/^[a-zA-Z0-9-]+$/.test(projectName)) {
+            p.cancel("Project name must contain only letters, numbers, and hyphens");
             process.exit(1);
         }
 
