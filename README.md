@@ -10,39 +10,39 @@ Repo: [Github Repo](https://github.com/ardzero/bunestro)
 Create a new project using:
 
 ```bash
-bun create bunestro my-app
+bun create bunestro@latest my-app
 ```
 
 Or with npm:
 
 ```bash
-npm create bunestro my-app
+npm reate bunestro@latest my-app
 ```
 
 ### Quick Setup Options
 
 ```bash
 # Interactive mode (recommended for first time)
-bun create bunestro my-app
+bun create bunestro@latest my-app
 
 # Skip all prompts, use defaults
-bun create bunestro my-app -y
+bun create bunestro@latest my-app -y
 
 # Open in editor after creation
-bun create bunestro my-app --cursor
-bun create bunestro my-app --vscode
+bun create bunestro@latest my-app --cursor
+bun create bunestro@latest my-app --vscode
 
 # Skip dependency installation
-bun create bunestro my-app --no-install
+bun create bunestro@latest my-app --no-install
 
 # Combine options
-bun create bunestro my-app -y --cursor
+bun create bunestro@latest my-app -y --cursor
 ```
 
 Run with `--help` flag to see all available options:
 
 ```bash
-bun create bunestro --help
+bun create bunestro@latest --help
 ```
 
 ## Usage (run locally)
