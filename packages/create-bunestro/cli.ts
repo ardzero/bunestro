@@ -37,6 +37,33 @@ interface CliArguments {
 type PackageManager = "bun" | "pnpm" | "yarn" | "npm";
 type EditorChoice = "cursor" | "vscode" | "skip" | null;
 
+function validateProjectName(name: string): string | undefined {
+    if (!name) return "Project name is required";
+    if (name === ".") return; // Allow current directory
+    if (!/^\.\/[a-zA-Z0-9-]+$/.test(name) && !/^[a-zA-Z0-9-]+$/.test(name)) {
+        return "Project name must contain only letters, numbers, and hyphens";
+    }
+    const dirName = name.startsWith("./") ? name.slice(2) : name;
+    if (existsSync(resolve(process.cwd(), dirName))) {
+        return `Directory "${dirName}" already exists`;
+    }
+}
+
+async function promptForProjectName(): Promise<string> {
+    const response = await p.text({
+        message: "Where should we create your new project?",
+        placeholder: "./subsequent-star",
+        validate: validateProjectName,
+    });
+
+    if (p.isCancel(response)) {
+        p.cancel("Operation cancelled");
+        process.exit(0);
+    }
+
+    return response as string;
+}
+
 function showHelp(): void {
     console.clear();
     p.intro(color.bgCyan(color.black(" create-bunestro ")));
@@ -128,30 +155,18 @@ async function main(): Promise<void> {
     let projectName: string = argv._[0] as string | undefined || "";
     let useCurrentDir = false;
 
-    // Prompt for project name if not provided
+    // Prompt for project name if not provided or if provided name already exists
     if (!projectName) {
-        const response = await p.text({
-            message: "Where should we create your new project?",
-            placeholder: "./subsequent-star",
-            validate: (value: string) => {
-                if (!value) return "Project name is required";
-                if (value === ".") return; // Allow current directory
-                if (!/^\.\/[a-zA-Z0-9-]+$/.test(value) && !/^[a-zA-Z0-9-]+$/.test(value)) {
-                    return "Project name must contain only letters, numbers, and hyphens";
-                }
-                const dirName = value.startsWith("./") ? value.slice(2) : value;
-                if (existsSync(resolve(process.cwd(), dirName))) {
-                    return `Directory "${dirName}" already exists`;
-                }
-            },
-        });
+        projectName = await promptForProjectName();
+    } else {
+        // Validate provided project name
+        projectName = projectName.startsWith("./") ? projectName.slice(2) : projectName;
 
-        if (p.isCancel(response)) {
-            p.cancel("Operation cancelled");
-            process.exit(0);
+        const validationError = validateProjectName(projectName);
+        if (validationError) {
+            p.log.error(validationError);
+            projectName = await promptForProjectName();
         }
-
-        projectName = response as string;
     }
 
     // Handle current directory
@@ -168,19 +183,15 @@ async function main(): Promise<void> {
             process.exit(1);
         }
     } else {
-        // Strip ./ prefix if present
+        // Strip ./ prefix if present (in case it wasn't stripped earlier)
         if (projectName.startsWith("./")) {
             projectName = projectName.slice(2);
         }
 
-        // Validate project name
-        if (!/^[a-zA-Z0-9-]+$/.test(projectName)) {
-            p.cancel("Project name must contain only letters, numbers, and hyphens");
-            process.exit(1);
-        }
-
-        if (existsSync(resolve(process.cwd(), projectName))) {
-            p.cancel(`Directory "${projectName}" already exists`);
+        // Final validation
+        const validationError = validateProjectName(projectName);
+        if (validationError) {
+            p.cancel(validationError);
             process.exit(1);
         }
     }
