@@ -11,7 +11,7 @@ export function Term({ className }: TTerm) {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = async () => {
-		await navigator.clipboard.writeText("bunx @ardly/bunestro ");
+		await navigator.clipboard.writeText("bun create bunestro ");
 		setCopied(true);
 		setTimeout(() => setCopied(false), 2000);
 	};
