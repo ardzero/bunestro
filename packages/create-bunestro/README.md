@@ -1,4 +1,4 @@
-[![Bunestro](https://bunestro.ardastroid.com/ogImage.png)](https://bunestro.ardastroid.com/)
+[![Bunestro](https://bunestro.ardastroid.com/ogImage.webp)](https://bunestro.ardastroid.com/)
 
 # Bunestro
 

@@ -2,7 +2,7 @@
 	"name": "@ardly/bunestro",
 	"description": "CLI tool to create Astro project using Bunestro template",
 	"author": "Ard Astroid <ardastroid@gmail.com>",
-	"version": "0.0.1",
+	"version": "0.0.4",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -14,14 +14,18 @@
 		"url": "https://github.com/ardzero/bunestro/issues"
 	},
 	"bin": {
-		"create-bunestro": "./cli.mjs"
+		"create-bunestro": "./dist/cli.js"
 	},
 	"type": "module",
 	"files": [
-		"cli.mjs",
+		"dist",
 		"README.md"
 	],
-	"main": "cli.mjs",
+	"main": "./dist/cli.js",
+	"scripts": {
+		"build": "bun build cli.mjs --outdir dist --target node --minify --sourcemap=external",
+		"prepublishOnly": "bun run build"
+	},
 	"engines": {
 		"node": ">=20.0.0"
 	},
@@ -38,7 +42,7 @@
 		"create-app",
 		"boilerplate"
 	],
-	"dependencies": {
+	"devDependencies": {
 		"kleur": "^4.1.5",
 		"prompts": "^2.4.2",
 		"yargs": "^17.7.2",
