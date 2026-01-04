@@ -391,6 +391,7 @@ async function main(): Promise<void> {
         shouldInitGit = gitResponse;
     }
 
+    let gitInitialized = false;
     if (shouldInitGit) {
         s.start("Initializing git repository");
         try {
@@ -399,6 +400,7 @@ async function main(): Promise<void> {
             await execa("git", ["add", "."], { cwd: gitCwd });
             await execa("git", ["commit", "-m", "Initial commit"], { cwd: gitCwd });
             s.stop("Git repository initialized");
+            gitInitialized = true;
         } catch (error: any) {
             s.stop("Git initialization skipped");
 
@@ -416,6 +418,96 @@ async function main(): Promise<void> {
                 p.log.info('     git config --global user.email "you@example.com"');
             }
             // Continue anyway - git init is optional
+        }
+    }
+
+    // Connect to remote repository
+    if (gitInitialized) {
+        const connectRemoteResponse = await p.confirm({
+            message: "Connect to a remote repository?",
+            initialValue: false,
+        });
+
+        if (p.isCancel(connectRemoteResponse)) {
+            p.log.info("Skipping remote repository setup");
+        } else if (connectRemoteResponse) {
+            const remoteUrlResponse = await p.text({
+                message: "Enter the remote repository URL:",
+                placeholder: "https://github.com/username/repo.git",
+                validate: (value: string) => {
+                    if (!value) return "Remote URL is required";
+                    if (
+                        !value.startsWith("https://github.com/") &&
+                        !value.startsWith("git@github.com:") &&
+                        !value.startsWith("https://gitlab.com/") &&
+                        !value.startsWith("git@gitlab.com:")
+                    ) {
+                        return "Please enter a valid Github or Gitlab repository URL";
+                    }
+                },
+            });
+
+            if (p.isCancel(remoteUrlResponse)) {
+                p.log.info("Skipping remote repository setup");
+            } else {
+                const remoteUrl = remoteUrlResponse as string;
+
+                const pushChoice = await p.select({
+                    message: "What would you like to do?",
+                    options: [
+                        { value: "push", label: "Add remote and push code now" },
+                        { value: "connect", label: "Just add remote (don't push yet)" },
+                    ],
+                    initialValue: "push",
+                });
+
+                if (p.isCancel(pushChoice)) {
+                    p.log.info("Skipping remote repository setup");
+                } else {
+                    const shouldPush = pushChoice === "push";
+                    s.start(shouldPush ? "Connecting and pushing to remote repository" : "Adding remote repository");
+
+                    try {
+                        const gitCwd = useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName);
+                        await execa("git", ["remote", "add", "origin", remoteUrl], { cwd: gitCwd });
+                        await execa("git", ["branch", "-M", "main"], { cwd: gitCwd });
+
+                        if (shouldPush) {
+                            await execa("git", ["push", "-u", "origin", "main"], { cwd: gitCwd });
+                            s.stop("Connected and pushed to remote repository");
+                            p.log.success(`Successfully pushed to ${remoteUrl}`);
+                        } else {
+                            s.stop("Remote repository added");
+                            p.log.success(`Remote added: ${remoteUrl}`);
+                            p.log.info("You can push later with: git push -u origin main");
+                        }
+                    } catch (error: any) {
+                        s.stop(shouldPush ? "Failed to connect and push" : "Failed to add remote");
+
+                        if (
+                            error.message.includes("Permission denied") ||
+                            error.message.includes("authentication failed")
+                        ) {
+                            p.log.error("Authentication failed");
+                            p.log.info("Make sure you have the correct permissions and authentication set up.");
+                        } else if (error.message.includes("Repository not found")) {
+                            p.log.error("Repository not found");
+                            p.log.info("Make sure the repository exists and the URL is correct.");
+                        } else if (error.message.includes("already exists")) {
+                            p.log.error("Remote 'origin' already exists");
+                            p.log.info("You can manually set the remote with:");
+                            p.log.info(`  git remote set-url origin ${remoteUrl}`);
+                        } else {
+                            p.log.error("Error:");
+                            p.log.info(error.message);
+                            p.log.info("\nYou can manually connect later with:");
+                            p.log.info(`  git remote add origin ${remoteUrl}`);
+                            p.log.info("  git branch -M main");
+                            p.log.info("  git push -u origin main");
+                        }
+                    }
+                }
+            }
         }
     }
 
