@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import { execa } from "execa";
-import prompts from "prompts";
+import * as p from "@clack/prompts";
+import color from "picocolors";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import kleur from "kleur";
-import ora from "ora";
 import { existsSync } from "fs";
 import { resolve } from "path";
 
@@ -61,21 +60,21 @@ const argv = yargs(hideBin(process.argv))
     .parse() as CliArguments;
 
 async function main(): Promise<void> {
-    console.log(kleur.bold().cyan("\n🚀 Create Bunestro App\n"));
+    console.clear();
+
+    p.intro(color.bgCyan(color.black(" create-bunestro ")));
 
     let projectName: string = argv._[0] as string | undefined || "";
     let useCurrentDir = false;
 
     // Prompt for project name if not provided
     if (!projectName) {
-        const response = await prompts({
-            type: "text",
-            name: "projectName",
+        const response = await p.text({
             message: "Where should we create your new project?",
-            initial: "./subsequent-star",
+            placeholder: "./subsequent-star",
             validate: (value: string) => {
                 if (!value) return "Project name is required";
-                if (value === ".") return true; // Allow current directory
+                if (value === ".") return; // Allow current directory
                 if (!/^\.\/[a-z0-9-]+$/.test(value) && !/^[a-z0-9-]+$/.test(value)) {
                     return "Project name must contain only lowercase letters, numbers, and hyphens";
                 }
@@ -83,16 +82,15 @@ async function main(): Promise<void> {
                 if (existsSync(resolve(process.cwd(), dirName))) {
                     return `Directory "${dirName}" already exists`;
                 }
-                return true;
             },
         });
 
-        if (!response.projectName) {
-            console.log(kleur.red("\n✖ Operation cancelled"));
+        if (p.isCancel(response)) {
+            p.cancel("Operation cancelled");
             process.exit(0);
         }
 
-        projectName = response.projectName;
+        projectName = response as string;
     }
 
     // Handle current directory
@@ -106,28 +104,25 @@ async function main(): Promise<void> {
 
         // Validate project name
         if (!/^[a-z0-9-]+$/.test(projectName)) {
-            console.error(
-                kleur.red(
-                    "✖ Project name must contain only lowercase letters, numbers, and hyphens",
-                ),
-            );
+            p.cancel("Project name must contain only lowercase letters, numbers, and hyphens");
             process.exit(1);
         }
 
         if (existsSync(resolve(process.cwd(), projectName))) {
-            console.error(kleur.red(`✖ Directory "${projectName}" already exists`));
+            p.cancel(`Directory "${projectName}" already exists`);
             process.exit(1);
         }
     }
 
     // Clone template
-    const cloneSpinner = ora("Cloning template...").start();
+    const s = p.spinner();
+    s.start("Cloning template");
     const tempDir = useCurrentDir ? ".bunestro-temp" : projectName;
     try {
         await execa("git", ["clone", "--depth", "1", REPO_URL, tempDir]);
-        cloneSpinner.succeed(kleur.green("Template cloned"));
+        s.stop("Template cloned");
     } catch (error: any) {
-        cloneSpinner.fail(kleur.red("Failed to clone template"));
+        s.stop("Failed to clone template");
 
         // Provide helpful error messages based on error type
         if (
@@ -135,34 +130,24 @@ async function main(): Promise<void> {
             error.message.includes("unable to access") ||
             error.message.includes("Failed to connect")
         ) {
-            console.error(kleur.yellow("\n⚠ Network error: Unable to reach GitHub"));
-            console.error(
-                kleur.dim("Please check your internet connection and try again."),
-            );
+            p.log.error("Network error: Unable to reach GitHub");
+            p.log.info("Please check your internet connection and try again.");
         } else if (error.message.includes("Repository not found")) {
-            console.error(kleur.yellow("\n⚠ Repository not found"));
-            console.error(
-                kleur.dim(`The template repository at ${REPO_URL} could not be found.`),
-            );
+            p.log.error("Repository not found");
+            p.log.info(`The template repository at ${REPO_URL} could not be found.`);
         } else if (error.message.includes("already exists")) {
-            console.error(
-                kleur.yellow(`\n⚠ Directory "${tempDir}" already exists`),
-            );
-            console.error(
-                kleur.dim(
-                    "Please choose a different project name or remove the existing directory.",
-                ),
-            );
+            p.log.error(`Directory "${tempDir}" already exists`);
+            p.log.info("Please choose a different project name or remove the existing directory.");
         } else {
-            console.error(kleur.red("\n✖ Error details:"));
-            console.error(kleur.dim(error.message));
+            p.log.error("Error details:");
+            p.log.info(error.message);
         }
 
         process.exit(1);
     }
 
     // Remove .git directory and CLI-related folders
-    const cleanSpinner = ora("Cleaning up...").start();
+    s.start("Cleaning up");
     try {
         const isWindows = process.platform === "win32";
         const targetDir = useCurrentDir ? tempDir : projectName;
@@ -230,19 +215,17 @@ async function main(): Promise<void> {
             }
         }
 
-        cleanSpinner.succeed(kleur.green("Cleaned up"));
+        s.stop("Cleaned up");
     } catch (error: any) {
-        cleanSpinner.fail(kleur.red("Failed to clean up"));
-        console.error(kleur.yellow("\n⚠ Could not remove some directories"));
-        console.error(kleur.dim("You can manually delete them later."));
+        s.stop("Failed to clean up");
+        p.log.warn("Could not remove some directories");
+        p.log.info("You can manually delete them later.");
         // Don't exit - this is not critical
     }
 
     // Detect package manager
     const packageManager = detectPackageManager();
-    console.log(
-        kleur.dim(`\nDetected package manager: ${kleur.bold(packageManager)}`),
-    );
+    p.log.info(`Detected package manager: ${packageManager}`);
 
     // Install dependencies
     let shouldInstall = argv.install;
@@ -250,72 +233,67 @@ async function main(): Promise<void> {
     if (argv.y) {
         shouldInstall = true;
     } else if (shouldInstall === undefined) {
-        const installResponse = await prompts({
-            type: "confirm",
-            name: "install",
+        const installResponse = await p.confirm({
             message: "Install dependencies?",
-            initial: true,
+            initialValue: true,
         });
-        shouldInstall = installResponse.install;
+
+        if (p.isCancel(installResponse)) {
+            p.cancel("Operation cancelled");
+            process.exit(0);
+        }
+
+        shouldInstall = installResponse;
     }
 
     if (shouldInstall) {
-        const installSpinner = ora("Installing dependencies...").start();
+        s.start("Installing dependencies");
         try {
             await execa(packageManager, ["install"], {
                 cwd: useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName),
                 stdio: "pipe",
             });
-            installSpinner.succeed(kleur.green("Dependencies installed"));
+            s.stop("Dependencies installed");
         } catch (error: any) {
-            installSpinner.fail(kleur.red("Failed to install dependencies"));
+            s.stop("Failed to install dependencies");
 
             if (
                 error.message.includes("ENOTFOUND") ||
                 error.message.includes("network") ||
                 error.message.includes("timeout")
             ) {
-                console.error(kleur.yellow("\n⚠ Network error during installation"));
-                console.error(
-                    kleur.dim(`You can install dependencies later by running:`),
-                );
+                p.log.error("Network error during installation");
+                p.log.info("You can install dependencies later by running:");
                 if (!useCurrentDir) {
-                    console.error(
-                        kleur.dim(`  cd ${projectName} && ${packageManager} install`),
-                    );
+                    p.log.info(`  cd ${projectName} && ${packageManager} install`);
                 } else {
-                    console.error(kleur.dim(`  ${packageManager} install`));
+                    p.log.info(`  ${packageManager} install`);
                 }
             } else if (
                 error.message.includes("EACCES") ||
                 error.message.includes("permission denied")
             ) {
-                console.error(kleur.yellow("\n⚠ Permission error"));
-                console.error(
-                    kleur.dim("Try running the command with appropriate permissions."),
-                );
+                p.log.error("Permission error");
+                p.log.info("Try running the command with appropriate permissions.");
             } else {
-                console.error(kleur.red("\n✖ Installation error:"));
-                console.error(kleur.dim(error.message));
-                console.error(kleur.dim(`\nYou can try installing manually:`));
+                p.log.error("Installation error:");
+                p.log.info(error.message);
+                p.log.info("You can try installing manually:");
                 if (!useCurrentDir) {
-                    console.error(
-                        kleur.dim(`  cd ${projectName} && ${packageManager} install`),
-                    );
+                    p.log.info(`  cd ${projectName} && ${packageManager} install`);
                 } else {
-                    console.error(kleur.dim(`  ${packageManager} install`));
+                    p.log.info(`  ${packageManager} install`);
                 }
             }
 
             // Ask if user wants to continue anyway
-            const continueResponse = await prompts({
-                type: "confirm",
-                name: "continue",
+            const continueResponse = await p.confirm({
                 message: "Continue without installing dependencies?",
-                initial: true,
+                initialValue: true,
             });
 
-            if (!continueResponse.continue) {
+            if (p.isCancel(continueResponse) || !continueResponse) {
+                p.cancel("Operation cancelled");
                 process.exit(1);
             }
 
@@ -329,42 +307,42 @@ async function main(): Promise<void> {
     if (argv.y) {
         shouldInitGit = true;
     } else if (shouldInitGit === undefined) {
-        const gitResponse = await prompts({
-            type: "confirm",
-            name: "git",
+        const gitResponse = await p.confirm({
             message: "Initialize a new git repository?",
-            initial: true,
+            initialValue: true,
         });
-        shouldInitGit = gitResponse.git;
+
+        if (p.isCancel(gitResponse)) {
+            p.cancel("Operation cancelled");
+            process.exit(0);
+        }
+
+        shouldInitGit = gitResponse;
     }
 
     if (shouldInitGit) {
-        const gitSpinner = ora("Initializing git repository...").start();
+        s.start("Initializing git repository");
         try {
             const gitCwd = useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName);
             await execa("git", ["init"], { cwd: gitCwd });
             await execa("git", ["add", "."], { cwd: gitCwd });
             await execa("git", ["commit", "-m", "Initial commit"], { cwd: gitCwd });
-            gitSpinner.succeed(kleur.green("Git repository initialized"));
+            s.stop("Git repository initialized");
         } catch (error: any) {
-            gitSpinner.warn(kleur.yellow("Git initialization skipped"));
+            s.stop("Git initialization skipped");
 
             if (
                 error.message.includes("not found") ||
                 error.message.includes("command not found")
             ) {
-                console.error(kleur.dim("Git is not installed or not in PATH."));
+                p.log.warn("Git is not installed or not in PATH.");
             } else if (
                 error.message.includes("user.name") ||
                 error.message.includes("user.email")
             ) {
-                console.error(kleur.dim("Git user configuration is missing."));
-                console.error(
-                    kleur.dim('Run: git config --global user.name "Your Name"'),
-                );
-                console.error(
-                    kleur.dim('     git config --global user.email "you@example.com"'),
-                );
+                p.log.warn("Git user configuration is missing.");
+                p.log.info('Run: git config --global user.name "Your Name"');
+                p.log.info('     git config --global user.email "you@example.com"');
             }
             // Continue anyway - git init is optional
         }
@@ -378,18 +356,21 @@ async function main(): Promise<void> {
     } else if (argv.vscode) {
         editorChoice = "vscode";
     } else if (!argv.y) {
-        const editorResponse = await prompts({
-            type: "select",
-            name: "editor",
+        const editorResponse = await p.select({
             message: "Open project in editor?",
-            choices: [
-                { title: "Cursor", value: "cursor" },
-                { title: "VS Code", value: "vscode" },
-                { title: "Skip", value: "skip" },
+            options: [
+                { value: "cursor", label: "Cursor" },
+                { value: "vscode", label: "VS Code" },
+                { value: "skip", label: "Skip" },
             ],
-            initial: 0,
+            initialValue: "cursor",
         });
-        editorChoice = editorResponse.editor;
+
+        if (p.isCancel(editorResponse)) {
+            editorChoice = "skip";
+        } else {
+            editorChoice = editorResponse as EditorChoice;
+        }
     }
 
     if (editorChoice && editorChoice !== "skip") {
@@ -400,37 +381,35 @@ async function main(): Promise<void> {
             await execa(editor, ["."], {
                 cwd: useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName),
             });
-            console.log(kleur.green(`\n✓ Opened in ${editorName}`));
+            p.log.success(`Opened in ${editorName}`);
         } catch (error: any) {
-            console.log(kleur.yellow(`\n⚠ Could not open ${editorName}`));
+            p.log.warn(`Could not open ${editorName}`);
 
             if (
                 error.message.includes("not found") ||
                 error.message.includes("command not found")
             ) {
-                console.log(
-                    kleur.dim(`${editorName} CLI is not installed or not in PATH.`),
-                );
+                p.log.info(`${editorName} CLI is not installed or not in PATH.`);
                 if (!useCurrentDir) {
-                    console.log(
-                        kleur.dim(`You can open the project manually: cd ${projectName}`),
-                    );
+                    p.log.info(`You can open the project manually: cd ${projectName}`);
                 }
             }
         }
     }
 
     // Success message
-    console.log(kleur.bold().green("\n✓ All done! 🎉\n"));
-    console.log(kleur.bold("Next steps:"));
+    let nextSteps = "";
     if (!useCurrentDir) {
-        console.log(kleur.dim(`  cd ${projectName}`));
+        nextSteps += `cd ${projectName}\n`;
     }
     if (!shouldInstall) {
-        console.log(kleur.dim(`  ${packageManager} install`));
+        nextSteps += `${packageManager} install\n`;
     }
-    console.log(kleur.dim(`  ${packageManager} run dev`));
-    console.log();
+    nextSteps += `${packageManager} run dev`;
+
+    p.note(nextSteps, "Next steps");
+
+    p.outro(color.green("All done! 🎉"));
 }
 
 function detectPackageManager(): PackageManager {
@@ -447,16 +426,15 @@ function detectPackageManager(): PackageManager {
 }
 
 main().catch((error: any) => {
-    console.error(kleur.red("\n✖ An unexpected error occurred:"));
-
     if (error.isCanceled) {
-        console.log(kleur.yellow("\n⚠ Operation cancelled by user"));
+        p.cancel("Operation cancelled by user");
         process.exit(0);
     }
 
-    console.error(kleur.dim(error.message || error));
-    console.error(kleur.dim("\nIf this issue persists, please report it at:"));
-    console.error(kleur.dim("https://github.com/ardzero/bunestro/issues"));
+    p.log.error("An unexpected error occurred:");
+    p.log.info(error.message || error);
+    p.log.info("\nIf this issue persists, please report it at:");
+    p.log.info("https://github.com/ardzero/bunestro/issues");
     process.exit(1);
 });
 

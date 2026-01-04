@@ -2,7 +2,7 @@
 	"name": "@ardly/bunestro",
 	"description": "CLI tool to create Astro project using Bunestro template",
 	"author": "Ard Astroid <ardastroid@gmail.com>",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -43,14 +43,12 @@
 		"boilerplate"
 	],
 	"devDependencies": {
+		"@clack/prompts": "^0.11.0",
 		"@types/bun": "^1.1.15",
 		"@types/node": "^20.0.0",
-		"@types/prompts": "^2.4.9",
 		"@types/yargs": "^17.0.32",
-		"kleur": "^4.1.5",
-		"prompts": "^2.4.2",
 		"yargs": "^17.7.2",
-		"ora": "^8.0.1",
-		"execa": "^9.0.0"
+		"execa": "^9.0.0",
+		"picocolors": "^1.1.1"
 	}
 }
