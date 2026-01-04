@@ -42,13 +42,13 @@ function showHelp(): void {
     p.intro(color.bgCyan(color.black(" create-bunestro ")));
 
     console.log(color.bold("\nUsage:"));
-    console.log(`  ${color.cyan("bunx @ardly/bunestro")} ${color.dim("[project-name] [options]")}`);
+    console.log(`  ${color.cyan("bun create bunestro")} ${color.dim("[project-name] [options]")}`);
 
     p.note(
-        `${color.cyan("bunx @ardly/bunestro my-app")}\n  Create a new project with interactive prompts\n\n` +
-        `${color.cyan("bunx @ardly/bunestro my-app -y")}\n  Create with all defaults (install deps, init git)\n\n` +
-        `${color.cyan("bunx @ardly/bunestro my-app --cursor --git")}\n  Create and open in Cursor with git initialized\n\n` +
-        `${color.cyan("bunx @ardly/bunestro my-app --no-install")}\n  Create without installing dependencies`,
+        `${color.cyan("bun create bunestro my-app")}\n  Create a new project with interactive prompts\n\n` +
+        `${color.cyan("bun create bunestro my-app -y")}\n  Create with all defaults (install deps, init git)\n\n` +
+        `${color.cyan("bun create bunestro my-app --cursor --git")}\n  Create and open in Cursor with git initialized\n\n` +
+        `${color.cyan("bun create bunestro my-app --no-install")}\n  Create without installing dependencies`,
         "Examples"
     );
 

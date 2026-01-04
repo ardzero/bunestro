@@ -1,13 +1,19 @@
 [![Bunestro](https://bunestro.ardastroid.com/ogImage.webp)](https://bunestro.ardastroid.com/)
 
-# create-bunestro
+# @ardly/bunestro
 
 A CLI tool to scaffold Astro projects with Tailwind CSS, React, Shadcn UI, and more pre-configured utilities.
+
+> **Note:** This is a wrapper package for `create-bunestro`. For the best experience, use `bun create bunestro` instead.
 
 ## Quick Start
 
 ```bash
+# Recommended (uses create-bunestro directly)
 bun create bunestro my-app
+
+# Or using this wrapper
+bunx @ardly/bunestro my-app
 ```
 
 ## CLI Usage
@@ -141,3 +147,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+

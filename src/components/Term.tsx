@@ -21,7 +21,7 @@ export function Term({ className }: TTerm) {
 			className={cn("flex place-items-center items-center gap-1", className)}
 		>
 			<code className="rounded-md border bg-muted/50 p-2 px-3 text-sm">
-				bunx @ardly/bunestro
+				bun create bunestro
 			</code>
 			<Button size="icon" onClick={handleCopy}>
 				<div className="relative h-4 w-4">

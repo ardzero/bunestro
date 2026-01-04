@@ -10,10 +10,40 @@ Repo: [Github Repo](https://github.com/ardzero/bunestro)
 Create a new project using:
 
 ```bash
-bunx @ardly/bunestro project-name
+bun create bunestro my-app
 ```
 
-You can specify `-vs` or `--cursor` flags to auto open the project in VSCode or Cursor respectively after installation.
+Or with npm:
+
+```bash
+npm create bunestro my-app
+```
+
+### Quick Setup Options
+
+```bash
+# Interactive mode (recommended for first time)
+bun create bunestro my-app
+
+# Skip all prompts, use defaults
+bun create bunestro my-app -y
+
+# Open in editor after creation
+bun create bunestro my-app --cursor
+bun create bunestro my-app --vscode
+
+# Skip dependency installation
+bun create bunestro my-app --no-install
+
+# Combine options
+bun create bunestro my-app -y --cursor
+```
+
+Run with `--help` flag to see all available options:
+
+```bash
+bun create bunestro --help
+```
 
 ## Usage (run locally)
 
@@ -21,7 +51,7 @@ You can specify `-vs` or `--cursor` flags to auto open the project in VSCode or 
 
 Go to the `root` folder where `package.json` exists.
 
-> skip this if you're using the bunx @ardly/bunestro project-name command, it auto installs the deps
+> Skip this if you used `bun create bunestro` with dependency installation (default)
 
 ```bash
 # Using bun
