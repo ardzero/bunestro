@@ -51,7 +51,12 @@ export type TSiteData = {
 	publisher: string;
 	baseUrl: string;
 	description: string;
-	ogImage: TImage;
+	ogImage: {
+		src: string;
+		alt: string;
+		width?: number;
+		height?: number;
+	};
 	metadata_color: MetadataColor;
 	author: Author;
 	keywords: string[];
