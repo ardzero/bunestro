@@ -488,9 +488,11 @@ async function main(): Promise<void> {
                             s.stop("Connected and pushed to remote repository");
                             p.log.success(`Successfully pushed to ${remoteUrl}`);
                         } else {
+                            // Set up auto upstream so `git push` works without -u flag
+                            await execa("git", ["config", "push.autoSetupRemote", "true"], { cwd: gitCwd });
                             s.stop("Remote repository added");
                             p.log.success(`Remote added: ${remoteUrl}`);
-                            p.log.info("You can push later with: git push -u origin main");
+                            p.log.info("You can push later with: git push (auto-tracking enabled)");
                         }
                     } catch (error: any) {
                         s.stop(shouldPush ? "Failed to connect and push" : "Failed to add remote");
@@ -513,8 +515,8 @@ async function main(): Promise<void> {
                             p.log.info(error.message);
                             p.log.info("\nYou can manually connect later with:");
                             p.log.info(`  git remote add origin ${remoteUrl}`);
-                            p.log.info("  git branch -M main");
-                            p.log.info("  git push -u origin main");
+                            p.log.info("  git config push.autoSetupRemote true");
+                            p.log.info("  git push");
                         }
                     }
                 }
