@@ -6,8 +6,6 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export const isSSR = typeof window === "undefined";
-
 // returns the base url with https:// if it doesn't have it
 export const getBaseUrl = (path?: string): string => {
     let url = siteData.baseUrl;
@@ -28,6 +26,19 @@ export const getBaseUrl = (path?: string): string => {
     return url;
 };
 
+// Thanks to eleventy-plugin-youtube-embed
+// https://github.com/gfscott/eleventy-plugin-youtube-embed/blob/main/lib/extractMatches.js
+const urlPattern =
+    /(?=(\s*))\1(?:<a [^>]*?>)??(?=(\s*))\2(?:https?:\/\/)??(?:w{3}\.)??(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|shorts\/)??([A-Za-z0-9-_]{11})(?:[^\s<>]*)(?=(\s*))\4(?:<\/a>)??(?=(\s*))\5/;
+export function extractYoutubeId(url: string): string | undefined {
+    const match = url.match(urlPattern);
+    return match?.[3];
+}
+
+export const isSSR = typeof window === "undefined";
+
+export const getPlaceholder = (width: number, height: number) =>
+    `https://v0.dev/placeholder.svg?height=${height}&width=${width}`
 // returns a promise that resolves after a given number of milliseconds
 export function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -45,7 +56,7 @@ export function getQrCode(link: string, size?: string): string {
 }
 
 // check if email is valid and returns true or false
-export function isValidEmail(email: string): boolean {
+export function isEmailValid(email: string): boolean {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return regex.test(email);
 }
@@ -116,36 +127,33 @@ export const generateUniqueCode = (): string | null => {
     return uniqueCode?.toString();
 };
 
-
-// Thanks to eleventy-plugin-youtube-embed
-// https://github.com/gfscott/eleventy-plugin-youtube-embed/blob/main/lib/extractMatches.js
-const urlPattern =
-    /(?=(\s*))\1(?:<a [^>]*?>)??(?=(\s*))\2(?:https?:\/\/)??(?:w{3}\.)??(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|shorts\/)??([A-Za-z0-9-_]{11})(?:[^\s<>]*)(?=(\s*))\4(?:<\/a>)??(?=(\s*))\5/;
-export function extractYoutubeId(url: string): string | undefined {
-    const match = url.match(urlPattern);
-    return match?.[3];
+// get screen size boolean
+export function isScreenSizeLessThan(screenSize: number = 800) {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < screenSize;
 }
-
 
 interface NavigatorWithUserAgentData extends Navigator {
     userAgentData?: {
         platform: string;
     };
 }
+type OS = "MacOS" | "iOS" | "Windows" | "Android" | "Linux" | null;
 // get the os
-export function getOS() {
+export function getOS(): OS {
     if (isSSR) return null;
-    let userAgent = window.navigator.userAgent,
+    const userAgent = window.navigator.userAgent,
         platform =
             (window.navigator as NavigatorWithUserAgentData)?.userAgentData
                 ?.platform || window.navigator.platform,
         macosPlatforms = ["Macintosh", "MacIntel", "MacPPC", "Mac68K"],
         windowsPlatforms = ["Win32", "Win64", "Windows", "WinCE"],
-        iosPlatforms = ["iPhone", "iPad", "iPod"],
-        os = null;
+        iosPlatforms = ["iPhone", "iPad", "iPod"];
+
+    let os: OS = null;
 
     if (macosPlatforms.indexOf(platform) !== -1) {
-        os = "Mac OS";
+        os = "MacOS";
     } else if (iosPlatforms.indexOf(platform) !== -1) {
         os = "iOS";
     } else if (windowsPlatforms.indexOf(platform) !== -1) {
@@ -158,11 +166,6 @@ export function getOS() {
     return os;
 }
 
-// get screen size boolean
-export function isScreenSizeLessThan(screenSize: number = 800) {
-    if (typeof window === "undefined") return false;
-    return window.innerWidth < screenSize;
-}
 
 // hasn't been tested yet
 // export function getBrowser() {
