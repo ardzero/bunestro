@@ -49,8 +49,8 @@ export function ScrollToTopButton({
 						className={cn(
 							"rounded-xl bg-primary p-2 text-primary-foreground shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary/90 hover:shadow-xl",
 							isVisible
-								? "motion-scale-in-[0.24] motion-translate-x-in-[0%] motion-translate-y-in-[111%]"
-								: "pointer-events-none motion-scale-out-[0] motion-opacity-out-[0%] motion-translate-y-out-[90%]",
+								? "motion-scale-in-[0.24] motion-translate-x-in-0 motion-translate-y-in-[111%]"
+								: "pointer-events-none motion-scale-out-0 motion-opacity-out-[0%] motion-translate-y-out-[90%]",
 							className,
 						)}
 						aria-label="Scroll to top"
