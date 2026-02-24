@@ -29,7 +29,7 @@ export const siteData: TSiteData = {
 		"Zod",
 	],
 
-	robotsDefault: "index, follow", // { index: false, follow: false }
+	robotsDefault: { index: true, follow: false }, // { index: false, follow: false }
 };
 
 // these are defaults may get overwrited in specific routes
@@ -38,7 +38,7 @@ export const twitterMetaData: TtwitterMetaData = {
 	title: siteData.name,
 	description: siteData.description,
 	image: siteData.ogImage.src,
-	creator: "@darkidop", //twitter username of author
+	creator: "@ardastroid", //twitter username of author
 };
 
 // By default, it uses the favicon mentioned at the top

@@ -14,7 +14,7 @@ export type Author = {
 	name: string;
 	url: string;
 };
-export type Trobots = "noindex, nofollow" | "index, follow";
+type TRobots = { index: boolean, follow: boolean }
 export type TImage = {
 	src: string | SvgComponent;
 	alt: string;
@@ -60,11 +60,11 @@ export type TSiteData = {
 	metadata_color: MetadataColor;
 	author: Author;
 	keywords: string[];
-	robotsDefault: Trobots;
+	robotsDefault: TRobots;
 };
 
 export type TtwitterMetaData = {
-	card: "summary_large_image";
+	card: 'summary_large_image' | 'summary' | 'app' | 'player'
 	title: string;
 	description: string;
 	image: string;
@@ -80,9 +80,14 @@ export type MetadataProps = {
 	url?: string | URL;
 	title?: string;
 	description?: string;
-	robots?: Trobots;
+	robots?: TRobots;
 	ogTitle?: string;
-	ogImage?: TImage;
+	ogImage?: {
+		src: string;
+		alt: string;
+		width?: number;
+		height?: number;
+	};
 	keywords?: string[];
 	author?: Author;
 	metadataColor?: MetadataColor;

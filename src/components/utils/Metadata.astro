@@ -29,6 +29,12 @@ let siteTitle = title
 let siteKeywords = keywords
 	? removeDuplicates(keywords, siteData.keywords)
 	: siteData.keywords;
+
+// Convert robots object to string for meta tag content
+let robotsString = [
+	robots.index ? "index" : "noindex",
+	robots.follow ? "follow" : "nofollow",
+].join(", ");
 ---
 
 <meta
@@ -50,7 +56,7 @@ let siteKeywords = keywords
 <meta name="keywords" content={siteKeywords.join(", ")} />
 <meta name="creator" content={author?.name || siteData.author.name} />
 <meta name="publisher" content={siteData.publisher} />
-<meta name="robots" content={robots} />
+<meta name="robots" content={robotsString} />
 <link rel="canonical" href={url} />
 
 <!-- og metadata -->
