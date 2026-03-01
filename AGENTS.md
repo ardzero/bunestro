@@ -21,6 +21,8 @@ the project is already configured with:
 - tailwind
 - shadcn
 
+#### Use bun as the package manager
+
 ### Code Implementation Guidelines
 
 Follow these rules when you write code:
