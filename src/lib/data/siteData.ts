@@ -7,7 +7,7 @@ export const siteData: TSiteData = {
 	name: "Bunestro - Astro v5 Bun Starter",
 	shortName: "Bunestro",
 	publisher: "bunestro.ardastroid.com",
-	baseUrl: import.meta.env.SITE, // make sure to change the link in astro.config.mjs
+	baseUrl: import.meta.env.SITE, // make sure to change the link in astro.config.mjs (may show type err until dev server is running)
 	description:
 		"Bunestro is a astro v5 starter template with tailwindcss, shadcn and some other cool feature that runs on bun or node",
 	ogImage: { src: "/ogImage.webp", alt: "Bunestro", width: 1200, height: 630 },
