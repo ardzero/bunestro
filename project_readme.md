@@ -1,10 +1,10 @@
-[![?{project-name}](?{repo-link}/blob/main/public/ogImage.webp)](https://bunestro.ardastroid.com/)
+[![?{project-name}](?{repo-link}/blob/main/public/ogImage.webp)](?{repo-link})
 
-# ?{porject-name}
+# ?{project-name}
 
 An astro website built on top of the [bunestro](https://bunestro.ardastroid.com/) starter kit.
 
-### Project Repo: [?{project-name}]([?{repo-link}])
+### Project Repo: [?{project-name}](?{repo-link})
 
 ## Running locally
 
