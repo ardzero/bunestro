@@ -112,7 +112,6 @@ npm run dev
 - [x] Add basic Shadcn components
 - [x] Add static img optimization component
 - [ ] Add sample responsive components
-- [ ] Add more documentation
 - [ ] Add state management examples
 
 ## Socials
