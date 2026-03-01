@@ -101,10 +101,10 @@ npm run dev
 
 ## Config
 
+- Data `src/lib/data/*`
 - Configure colors in `src/styles/globals.css`
-- Site default metadata in `astro.config.mjs`
-- Component configurations in `src/lib/data/siteData.ts`
-- Astro configurations in `astro.config.mjs`
+- Configure default metadata and title `src/lib/data/siteData.ts`
+- Types `src/types/`
 
 ## Roadmap
 
