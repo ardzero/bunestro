@@ -1,0 +1,117 @@
+name: Publish npm packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/create-bunestro/**"
+      - "packages/bunestro-wrapper/**"
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  publish:
+    name: Publish packages
+    runs-on: ubuntu-latest
+    environment: npm
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Upgrade npm to latest
+        run: npm install -g npm@latest
+
+      - name: Install create-bunestro dependencies
+        working-directory: packages/create-bunestro
+        run: bun install
+
+      - name: Check versions
+        id: version_check
+        working-directory: packages/create-bunestro
+        run: |
+          CB_NAME=$(node -p "require('./package.json').name")
+          CB_VERSION=$(node -p "require('./package.json').version")
+          echo "name=$CB_NAME" >> $GITHUB_OUTPUT
+          echo "version=$CB_VERSION" >> $GITHUB_OUTPUT
+
+          CB_PUBLISHED=$(npm view "$CB_NAME@$CB_VERSION" version 2>/dev/null || echo "")
+          if [ "$CB_PUBLISHED" = "$CB_VERSION" ]; then
+            echo "cb_already_published=true" >> $GITHUB_OUTPUT
+          else
+            echo "cb_already_published=false" >> $GITHUB_OUTPUT
+          fi
+
+          CB_MAJOR=$(echo $CB_VERSION | cut -d. -f1)
+          CB_MINOR=$(echo $CB_VERSION | cut -d. -f2)
+          CB_PATCH=$(echo $CB_VERSION | cut -d. -f3)
+          WRAPPER_MAJOR=$((CB_MAJOR + 1))
+          NEW_WRAPPER_VERSION="$WRAPPER_MAJOR.$CB_MINOR.$CB_PATCH"
+          echo "new_wrapper_version=$NEW_WRAPPER_VERSION" >> $GITHUB_OUTPUT
+
+          WRAPPER_PUBLISHED=$(npm view "@ardly/bunestro@$NEW_WRAPPER_VERSION" version 2>/dev/null || echo "")
+          if [ "$WRAPPER_PUBLISHED" = "$NEW_WRAPPER_VERSION" ]; then
+            echo "wrapper_already_published=true" >> $GITHUB_OUTPUT
+          else
+            echo "wrapper_already_published=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish create-bunestro
+        if: steps.version_check.outputs.cb_already_published == 'false'
+        working-directory: packages/create-bunestro
+        run: npm publish --provenance --access public
+
+      - name: Sync and publish @ardly/bunestro wrapper
+        if: steps.version_check.outputs.wrapper_already_published == 'false'
+        working-directory: packages/bunestro-wrapper
+        run: |
+          CB_VERSION="${{ steps.version_check.outputs.version }}"
+          NEW_WRAPPER_VERSION="${{ steps.version_check.outputs.new_wrapper_version }}"
+          WRAPPER_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Bumping wrapper from $WRAPPER_VERSION to $NEW_WRAPPER_VERSION"
+
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$NEW_WRAPPER_VERSION';
+            pkg.dependencies['create-bunestro'] = '^$CB_VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, '\t') + '\n');
+          "
+
+          echo "Waiting for create-bunestro@$CB_VERSION to be available on npm..."
+          for i in {1..12}; do
+            FOUND=$(npm view "create-bunestro@$CB_VERSION" version 2>/dev/null || echo "")
+            if [ "$FOUND" = "$CB_VERSION" ]; then
+              echo "Found on registry!"
+              break
+            fi
+            echo "Not yet available, retrying in 10s... ($i/12)"
+            sleep 10
+          done
+
+          bun install
+          npm publish --provenance --access public
+
+      - name: Commit updated wrapper package.json
+        if: steps.version_check.outputs.wrapper_already_published == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/bunestro-wrapper/package.json
+          git commit -m "chore: sync @ardly/bunestro to create-bunestro@${{ steps.version_check.outputs.version }}"
+          git push
