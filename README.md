@@ -16,7 +16,7 @@ bun create bunestro@latest my-app
 Or with npm:
 
 ```bash
-npm reate bunestro@latest my-app
+npm create bunestro@latest my-app
 ```
 
 ### Quick Setup Options
@@ -87,7 +87,7 @@ npm run dev
 
 ## Features
 
-- Astro 5.2
+- Astro 6
 - Tailwind CSS v4
 - React Integration
 - [Shadcn](https://ui.shadcn.com/) components

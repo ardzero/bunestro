@@ -44,7 +44,7 @@ npm run dev
 
 ## Tech Stack
 
-- [Astro 5.2](https://astro.build/)
+- [Astro 6](https://astro.build/)
 - [React 19](https://react.dev/)
 - [Tailwind CSS v4](https://tailwindcss.com/)
 - [Radix UI Primitives](https://www.radix-ui.com/primitives)

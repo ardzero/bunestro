@@ -102,7 +102,7 @@ Make sure the CLI is installed:
 
 The template comes with:
 
-- **Astro 5** with React integration
+- **Astro 6** with React integration
 - **Tailwind CSS** + **Shadcn UI** components
 - **Tailwind Motion** for smooth animations
 - **Theme support** (dark/light mode)
