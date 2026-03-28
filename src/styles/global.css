@@ -164,6 +164,14 @@
 @utility pre {
 	white-space: pre;
 }
+@utility testb {
+	border: 1px solid red;
+}
+@utility testb-* {
+	border-width: 1px;
+	border-style: solid;
+	border-color: --value(--color-*, [color]);
+}
 @utility break-words {
 	white-space: pre-wrap;
 	word-break: break-word;
