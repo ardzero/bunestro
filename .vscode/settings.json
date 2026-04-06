@@ -1,6 +1,20 @@
 {
 	"projectColors.mainColor": "#c7b175",
 	"window.title": "bunestro",
+	"tailwindCSS.experimental.classRegex": [
+		[
+			"(?:cva|cn|clsx)\\(([^)(]*(?:\\([^)(]*(?:\\([^)(]*(?:\\([^)(]*\\)[^)(]*)*\\)[^)(]*)*\\)[^)(]*)*)\\)",
+			"'([^']*)'"
+		],
+		[
+			"(?:cva|cn|clsx)\\(([^)(]*(?:\\([^)(]*(?:\\([^)(]*(?:\\([^)(]*\\)[^)(]*)*\\)[^)(]*)*\\)[^)(]*)*)\\)",
+			"\"([^\"]*)\""
+		],
+		[
+			"(?:cva|cn|clsx)\\(([^)(]*(?:\\([^)(]*(?:\\([^)(]*(?:\\([^)(]*\\)[^)(]*)*\\)[^)(]*)*\\)[^)(]*)*)\\)",
+			"`([^`]*)`"
+		]
+	],
 	"workbench.colorCustomizations": {
 		"statusBarItem.warningBackground": "#c7b175",
 		"statusBarItem.warningForeground": "#000000",
