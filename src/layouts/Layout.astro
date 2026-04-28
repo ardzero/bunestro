@@ -19,7 +19,11 @@ interface Props extends MetadataProps {
 	pageLoader?: boolean;
 	applicationContext?: ApplicationContextProps;
 }
-const { pageLoader = true, applicationContext }: Props = Astro.props;
+const {
+	pageLoader = true,
+	applicationContext,
+	...metadataProps
+}: Props = Astro.props;
 ---
 
 <!doctype html>
@@ -30,7 +34,7 @@ const { pageLoader = true, applicationContext }: Props = Astro.props;
 		<!-- https://react-scan.com/ -->
 		<!-- <script src="https://unpkg.com/react-scan/dist/auto.global.js"></script> -->
 		<!-- seo and open graph metadata -->
-		<Metadata {...Astro.props} />
+		<Metadata {...metadataProps} />
 		<!-- application context json (for product seo) -->
 		{applicationContext && <ApplicationContext {...applicationContext} />}
 		<!-- view transitions router -->
