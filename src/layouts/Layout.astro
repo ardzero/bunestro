@@ -1,5 +1,6 @@
 ---
 import "@/styles/global.css";
+import { Font } from "astro:assets";
 // custom fonts https://docs.astro.build/en/guides/fonts/
 // you can change the default font by changing --font-sans in global.css
 
@@ -34,6 +35,11 @@ const {
 		<!-- https://react-scan.com/ -->
 		<!-- <script src="https://unpkg.com/react-scan/dist/auto.global.js"></script> -->
 		<!-- seo and open graph metadata -->
+
+		<!-- fonts -->
+		<!-- <Font cssVariable="--font-inter" preload /> -->
+		<Font cssVariable="--font-satoshi" preload />
+		<!-- meta data  (seo and open graph metadata) -->
 		<Metadata {...metadataProps} />
 		<!-- application context json (for product seo) -->
 		{applicationContext && <ApplicationContext {...applicationContext} />}

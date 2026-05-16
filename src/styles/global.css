@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "./fonts.css";
 
 @plugin "tailwindcss-motion";
 
@@ -22,7 +21,7 @@
 }
 @theme inline {
 	/* fonts, font sans is the defualt body font (you can change that at the bottom of this file)*/
-	--font-sans: "Satoshi", sans-serif;
+	--font-sans: var(--font-satoshi);
 
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
