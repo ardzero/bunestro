@@ -87,7 +87,7 @@ npm run dev
 
 ## Features
 
-- Astro 6
+- Astro 7
 - Tailwind CSS v4
 - React Integration
 - [Shadcn](https://ui.shadcn.com/) components
