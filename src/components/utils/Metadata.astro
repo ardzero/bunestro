@@ -21,6 +21,7 @@ const {
 	titleSuffix = true,
 }: Props = Astro.props;
 const url = providedUrl ?? Astro.url;
+const resolvedIcons = metadataIcons ?? icons;
 
 let siteTitle = title
 	? `${title}${titleSuffix ? ` - ${siteData.name}` : ""}`
@@ -93,8 +94,17 @@ let robotsString = [
 <meta name="twitter:domain" content={url} />
 
 <!-- icons -->
-<link rel="shortcut icon" href={metadataIcons?.shortcut || icons.shortcut} />
-<link rel="icon" href={metadataIcons?.icon || icons.icon} />
-<link rel="apple-touch-icon" href={metadataIcons?.apple || icons.apple} />
+<link rel="shortcut icon" href={resolvedIcons.shortcut} />
+{resolvedIcons.icon.map((icon) => (
+	<link rel="icon" href={icon.url} type={icon.type} sizes={icon.sizes} />
+))}
+{resolvedIcons.apple.map((icon) => (
+	<link
+		rel="apple-touch-icon"
+		href={icon.url}
+		type={icon.type}
+		sizes={icon.sizes}
+	/>
+))}
 
 <link rel="sitemap" href="/sitemap-index.xml" />

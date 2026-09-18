@@ -45,7 +45,6 @@ export type MetadataColor = {
 };
 // site data types
 export type TSiteData = {
-	favicon: string;
 	name: string;
 	shortName: string;
 	publisher: string;
@@ -70,10 +69,16 @@ export type TtwitterMetaData = {
 	image: string;
 	creator: string;
 };
+export type TIconDescriptor = {
+	url: string;
+	type?: string;
+	sizes?: string;
+};
+
 export type TMetadataIcons = {
-	icon: string;
+	icon: TIconDescriptor[];
 	shortcut: string;
-	apple: string;
+	apple: TIconDescriptor[];
 };
 
 export type MetadataProps = {
