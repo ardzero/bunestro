@@ -13,7 +13,7 @@
 		"generate:icons": "bun scripts/generate-icons.ts"
 	},
 	"dependencies": {
-		"@astrojs/react": "6.0.5",
+		"@astrojs/react": "7.0.1",
 		"@astrojs/sitemap": "3.7.4",
 		"@radix-ui/react-label": "^2.1.15",
 		"@radix-ui/react-radio-group": "^1.4.7",
@@ -22,7 +22,7 @@
 		"@tailwindcss/vite": "^4.3.3",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
-		"astro": "7.3.2",
+		"astro": "7.3.8",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"lite-youtube-embed": "^0.3.4",
