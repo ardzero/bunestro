@@ -1,0 +1,28 @@
+name: Renovate notify
+
+# Renovate pushes with your own PAT, and GitHub never notifies you about your
+# own activity. This posts a comment as github-actions[bot] that @mentions the
+# repo owner, so an Astro major update reliably reaches your inbox.
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  notify-astro-major:
+    name: Notify about Astro major
+    if: github.event.label.name == 'astro-major'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mention repo owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          gh pr comment "$PR_NUMBER" --body "@$OWNER 🚀 A **major Astro update** is ready and was **not** auto-merged. Review the [upgrade guide](https://docs.astro.build/en/guides/upgrade-to/), check the CI build, then merge manually."

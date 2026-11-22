@@ -1,0 +1,65 @@
+{
+	$schema: "https://docs.renovatebot.com/renovate-schema.json",
+	extends: ["config:recommended"],
+
+	// Runs via .github/workflows/renovate.yml (self-hosted, free on public repos).
+	// New update branches/PRs are only created on Mondays (UTC); the daily
+	// workflow runs on other days only handle automerging, the Dependency
+	// Dashboard, and security fixes (which ignore this schedule).
+	timezone: "UTC",
+	schedule: ["* * * * 1"],
+
+	// Exact pins stay exact, ^ranges stay ^ with their minimum bumped.
+	rangeStrategy: "bump",
+
+	// Supply-chain safety: wait before adopting brand-new npm releases.
+	minimumReleaseAge: "3 days",
+
+	// Weekly runs batch many updates at once; don't throttle PR creation.
+	prHourlyLimit: 0,
+	prConcurrentLimit: 15,
+
+	labels: ["dependencies"],
+	osvVulnerabilityAlerts: true,
+
+	lockFileMaintenance: {
+		enabled: true,
+		automerge: true,
+		schedule: ["* * * * 1"],
+	},
+
+	packageRules: [
+		{
+			description: "Automerge patch + minor updates once CI passes",
+			matchUpdateTypes: ["minor", "patch", "digest"],
+			automerge: true,
+		},
+		{
+			description: "Major updates always need manual review",
+			matchUpdateTypes: ["major"],
+			automerge: false,
+			addLabels: ["major"],
+		},
+		{
+			description: "Keep Astro core and official integrations in lockstep",
+			matchPackageNames: ["astro", "@astrojs/**"],
+			groupName: "astro",
+		},
+		{
+			description: "Astro major: never automerge; the label triggers a notification (.github/workflows/renovate-notify.yml)",
+			matchPackageNames: ["astro", "@astrojs/**"],
+			matchUpdateTypes: ["major"],
+			automerge: false,
+			addLabels: ["astro-major"],
+			assignees: ["ardzero"],
+			prBodyNotes: [
+				"⚠️ **Astro major update** — not auto-merged. Read the upgrade guide before merging: https://docs.astro.build/en/guides/upgrade-to/",
+			],
+		},
+		{
+			description: "Wrapper's create-bunestro dependency is synced by the publish workflow",
+			matchFileNames: ["packages/bunestro-wrapper/**"],
+			enabled: false,
+		},
+	],
+}
