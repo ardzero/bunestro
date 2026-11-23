@@ -88,8 +88,8 @@ function replaceReadmeRepoPlaceholder(projectRoot: string, nameForPackage: strin
 function validateProjectName(name: string): string | undefined {
     if (!name) return "Project name is required";
     if (name === ".") return; // Allow current directory
-    if (!/^\.\/[a-zA-Z0-9-]+$/.test(name) && !/^[a-zA-Z0-9-]+$/.test(name)) {
-        return "Project name must contain only letters, numbers, and hyphens";
+    if (!/^(\.\/)?[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(name)) {
+        return "Project name must start with a letter or number and contain only letters, numbers, and hyphens";
     }
     const dirName = name.startsWith("./") ? name.slice(2) : name;
     if (existsSync(resolve(process.cwd(), dirName))) {

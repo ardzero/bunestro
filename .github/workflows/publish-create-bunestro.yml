@@ -1,5 +1,12 @@
 name: Publish npm packages
 
+# Two jobs so dependency code never runs with publish rights:
+# - build: no secrets, no OIDC. Frozen install with install scripts off, build,
+#   version check, and pack the tarballs to publish.
+# - publish: only when a version is new. Runs in the `npm` environment (needs
+#   your approval, main only) and publishes the packed tarballs with npm
+#   trusted publishing. It checks out no code and installs nothing.
+
 on:
   workflow_dispatch:
   push:
@@ -10,35 +17,32 @@ on:
       - "packages/bunestro-wrapper/**"
 
 permissions:
-  id-token: write
-  contents: write
+  contents: read
 
 jobs:
-  publish:
-    name: Publish packages
+  build:
+    name: Build packages
+    # Releases only come from main, including manual runs.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: npm
+    outputs:
+      version: ${{ steps.version_check.outputs.version }}
+      cb_publish: ${{ steps.version_check.outputs.cb_publish }}
+      wrapper_version: ${{ steps.version_check.outputs.wrapper_version }}
+      wrapper_publish: ${{ steps.version_check.outputs.wrapper_publish }}
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
-      # Bun handles install, build and scripting. npm is only needed for
-      # `npm publish --provenance` (trusted publishing via OIDC), which
-      # `bun publish` doesn't support. Node 26's bundled npm (11.x) does.
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "26"
-
       - name: Install create-bunestro dependencies
         working-directory: packages/create-bunestro
-        run: bun install
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Check versions
         id: version_check
@@ -46,55 +50,96 @@ jobs:
         run: |
           CB_NAME=$(bun -p "require('./package.json').name")
           CB_VERSION=$(bun -p "require('./package.json').version")
-          echo "name=$CB_NAME" >> $GITHUB_OUTPUT
-          echo "version=$CB_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$CB_VERSION" >> "$GITHUB_OUTPUT"
 
           CB_PUBLISHED=$(bun pm view "$CB_NAME@$CB_VERSION" version 2>/dev/null || echo "")
           if [ "$CB_PUBLISHED" = "$CB_VERSION" ]; then
-            echo "cb_already_published=true" >> $GITHUB_OUTPUT
+            echo "cb_publish=false" >> "$GITHUB_OUTPUT"
           else
-            echo "cb_already_published=false" >> $GITHUB_OUTPUT
+            echo "cb_publish=true" >> "$GITHUB_OUTPUT"
           fi
 
-          CB_MAJOR=$(echo $CB_VERSION | cut -d. -f1)
-          CB_MINOR=$(echo $CB_VERSION | cut -d. -f2)
-          CB_PATCH=$(echo $CB_VERSION | cut -d. -f3)
-          WRAPPER_MAJOR=$((CB_MAJOR + 1))
-          NEW_WRAPPER_VERSION="$WRAPPER_MAJOR.$CB_MINOR.$CB_PATCH"
-          echo "new_wrapper_version=$NEW_WRAPPER_VERSION" >> $GITHUB_OUTPUT
+          # The wrapper's version is create-bunestro's with the major bumped by one.
+          CB_MAJOR=$(echo "$CB_VERSION" | cut -d. -f1)
+          CB_MINOR=$(echo "$CB_VERSION" | cut -d. -f2)
+          CB_PATCH=$(echo "$CB_VERSION" | cut -d. -f3)
+          WRAPPER_VERSION="$((CB_MAJOR + 1)).$CB_MINOR.$CB_PATCH"
+          echo "wrapper_version=$WRAPPER_VERSION" >> "$GITHUB_OUTPUT"
 
-          WRAPPER_PUBLISHED=$(bun pm view "@ardly/bunestro@$NEW_WRAPPER_VERSION" version 2>/dev/null || echo "")
-          if [ "$WRAPPER_PUBLISHED" = "$NEW_WRAPPER_VERSION" ]; then
-            echo "wrapper_already_published=true" >> $GITHUB_OUTPUT
+          WRAPPER_PUBLISHED=$(bun pm view "@ardly/bunestro@$WRAPPER_VERSION" version 2>/dev/null || echo "")
+          if [ "$WRAPPER_PUBLISHED" = "$WRAPPER_VERSION" ]; then
+            echo "wrapper_publish=false" >> "$GITHUB_OUTPUT"
           else
-            echo "wrapper_already_published=false" >> $GITHUB_OUTPUT
+            echo "wrapper_publish=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish create-bunestro
-        if: steps.version_check.outputs.cb_already_published == 'false'
+      - name: Build and pack create-bunestro
+        if: steps.version_check.outputs.cb_publish == 'true'
         working-directory: packages/create-bunestro
-        run: npm publish --provenance --access public
-
-      - name: Sync and publish @ardly/bunestro wrapper
-        if: steps.version_check.outputs.wrapper_already_published == 'false'
-        working-directory: packages/bunestro-wrapper
         run: |
-          CB_VERSION="${{ steps.version_check.outputs.version }}"
-          NEW_WRAPPER_VERSION="${{ steps.version_check.outputs.new_wrapper_version }}"
-          WRAPPER_VERSION=$(bun -p "require('./package.json').version")
+          bun run build
+          bun pm pack --ignore-scripts --destination "$RUNNER_TEMP/packages"
 
-          echo "Bumping wrapper from $WRAPPER_VERSION to $NEW_WRAPPER_VERSION"
-
+      - name: Sync and pack @ardly/bunestro wrapper
+        if: steps.version_check.outputs.wrapper_publish == 'true'
+        working-directory: packages/bunestro-wrapper
+        env:
+          CB_VERSION: ${{ steps.version_check.outputs.version }}
+          WRAPPER_VERSION: ${{ steps.version_check.outputs.wrapper_version }}
+        run: |
           bun -e "
             const pkg = await Bun.file('package.json').json();
-            pkg.version = '$NEW_WRAPPER_VERSION';
-            pkg.dependencies['create-bunestro'] = '^$CB_VERSION';
+            pkg.version = process.env.WRAPPER_VERSION;
+            pkg.dependencies['create-bunestro'] = '^' + process.env.CB_VERSION;
             await Bun.write('package.json', JSON.stringify(pkg, null, '\t') + '\n');
           "
+          bun pm pack --ignore-scripts --destination "$RUNNER_TEMP/packages"
 
+      - name: Upload packed tarballs
+        if: steps.version_check.outputs.cb_publish == 'true' || steps.version_check.outputs.wrapper_publish == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: packages
+          path: ${{ runner.temp }}/packages/*.tgz
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish packages
+    needs: build
+    if: needs.build.outputs.cb_publish == 'true' || needs.build.outputs.wrapper_publish == 'true'
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download packed tarballs
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: packages
+          path: ${{ runner.temp }}/packages
+
+      # npm is only needed for `npm publish --provenance` (trusted publishing
+      # via OIDC), which `bun publish` doesn't support. Node 26's bundled npm
+      # (11.x) does.
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+
+      - name: Publish create-bunestro
+        if: needs.build.outputs.cb_publish == 'true'
+        run: npm publish "$RUNNER_TEMP"/packages/create-bunestro-*.tgz --provenance --access public --ignore-scripts
+
+      - name: Publish @ardly/bunestro wrapper
+        if: needs.build.outputs.wrapper_publish == 'true'
+        env:
+          CB_VERSION: ${{ needs.build.outputs.version }}
+        run: |
           echo "Waiting for create-bunestro@$CB_VERSION to be available on npm..."
           for i in {1..12}; do
-            FOUND=$(bun pm view "create-bunestro@$CB_VERSION" version 2>/dev/null || echo "")
+            FOUND=$(npm view "create-bunestro@$CB_VERSION" version 2>/dev/null || echo "")
             if [ "$FOUND" = "$CB_VERSION" ]; then
               echo "Found on registry!"
               break
@@ -103,14 +148,4 @@ jobs:
             sleep 10
           done
 
-          bun install
-          npm publish --provenance --access public
-
-      - name: Commit updated wrapper package.json
-        if: steps.version_check.outputs.wrapper_already_published == 'false'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add packages/bunestro-wrapper/package.json
-          git commit -m "pack: sync @ardly/bunestro to create-bunestro@${{ steps.version_check.outputs.version }}"
-          git push
+          npm publish "$RUNNER_TEMP"/packages/ardly-bunestro-*.tgz --provenance --access public --ignore-scripts
