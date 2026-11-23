@@ -13,24 +13,24 @@
 		"generate:icons": "bun scripts/generate-icons.ts"
 	},
 	"dependencies": {
-		"@astrojs/react": "7.0.1",
-		"@astrojs/sitemap": "3.7.4",
+		"@astrojs/react": "7.1.9",
+		"@astrojs/sitemap": "3.7.6",
 		"@radix-ui/react-label": "^2.1.17",
 		"@radix-ui/react-radio-group": "^1.5.1",
 		"@radix-ui/react-slot": "^1.5.0",
 		"@radix-ui/react-tooltip": "^1.4.1",
-		"@tailwindcss/vite": "^4.3.3",
+		"@tailwindcss/vite": "^4.3.5",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
-		"astro": "7.4.7",
+		"astro": "7.4.13",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"lite-youtube-embed": "^0.4.0",
-		"lucide-react": "^0.545.0",
-		"react": "^19.3.0",
-		"react-dom": "^19.3.0",
+		"lucide-react": "^0.577.0",
+		"react": "^19.3.1",
+		"react-dom": "^19.3.1",
 		"tailwind-merge": "^3.7.1",
-		"tailwindcss": "^4.3.3"
+		"tailwindcss": "^4.3.5"
 	},
 	"engines": {
 		"node": ">=22.23.5"
@@ -39,9 +39,9 @@
 		"runtime": true
 	},
 	"devDependencies": {
-		"@types/bun": "^1.4.2",
+		"@types/bun": "^1.4.5",
 		"baseline-browser-mapping": "^2.11.39",
-		"prettier": "^3.9.6",
+		"prettier": "^3.10.1",
 		"prettier-plugin-astro": "^0.14.1",
 		"prettier-plugin-tailwindcss": "^0.8.1",
 		"sharp": "^0.35.5",
