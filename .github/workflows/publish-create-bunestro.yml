@@ -21,20 +21,20 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
+      # Bun handles install, build and scripting. npm is only needed for
+      # `npm publish --provenance` (trusted publishing via OIDC), which
+      # `bun publish` doesn't support. Node 26's bundled npm (11.x) does.
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "20"
-
-      - name: Upgrade npm to latest
-        run: npm install -g npm@latest
+          node-version: "26"
 
       - name: Install create-bunestro dependencies
         working-directory: packages/create-bunestro
@@ -44,12 +44,12 @@ jobs:
         id: version_check
         working-directory: packages/create-bunestro
         run: |
-          CB_NAME=$(node -p "require('./package.json').name")
-          CB_VERSION=$(node -p "require('./package.json').version")
+          CB_NAME=$(bun -p "require('./package.json').name")
+          CB_VERSION=$(bun -p "require('./package.json').version")
           echo "name=$CB_NAME" >> $GITHUB_OUTPUT
           echo "version=$CB_VERSION" >> $GITHUB_OUTPUT
 
-          CB_PUBLISHED=$(npm view "$CB_NAME@$CB_VERSION" version 2>/dev/null || echo "")
+          CB_PUBLISHED=$(bun pm view "$CB_NAME@$CB_VERSION" version 2>/dev/null || echo "")
           if [ "$CB_PUBLISHED" = "$CB_VERSION" ]; then
             echo "cb_already_published=true" >> $GITHUB_OUTPUT
           else
@@ -63,7 +63,7 @@ jobs:
           NEW_WRAPPER_VERSION="$WRAPPER_MAJOR.$CB_MINOR.$CB_PATCH"
           echo "new_wrapper_version=$NEW_WRAPPER_VERSION" >> $GITHUB_OUTPUT
 
-          WRAPPER_PUBLISHED=$(npm view "@ardly/bunestro@$NEW_WRAPPER_VERSION" version 2>/dev/null || echo "")
+          WRAPPER_PUBLISHED=$(bun pm view "@ardly/bunestro@$NEW_WRAPPER_VERSION" version 2>/dev/null || echo "")
           if [ "$WRAPPER_PUBLISHED" = "$NEW_WRAPPER_VERSION" ]; then
             echo "wrapper_already_published=true" >> $GITHUB_OUTPUT
           else
@@ -81,21 +81,20 @@ jobs:
         run: |
           CB_VERSION="${{ steps.version_check.outputs.version }}"
           NEW_WRAPPER_VERSION="${{ steps.version_check.outputs.new_wrapper_version }}"
-          WRAPPER_VERSION=$(node -p "require('./package.json').version")
+          WRAPPER_VERSION=$(bun -p "require('./package.json').version")
 
           echo "Bumping wrapper from $WRAPPER_VERSION to $NEW_WRAPPER_VERSION"
 
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          bun -e "
+            const pkg = await Bun.file('package.json').json();
             pkg.version = '$NEW_WRAPPER_VERSION';
             pkg.dependencies['create-bunestro'] = '^$CB_VERSION';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, '\t') + '\n');
+            await Bun.write('package.json', JSON.stringify(pkg, null, '\t') + '\n');
           "
 
           echo "Waiting for create-bunestro@$CB_VERSION to be available on npm..."
           for i in {1..12}; do
-            FOUND=$(npm view "create-bunestro@$CB_VERSION" version 2>/dev/null || echo "")
+            FOUND=$(bun pm view "create-bunestro@$CB_VERSION" version 2>/dev/null || echo "")
             if [ "$FOUND" = "$CB_VERSION" ]; then
               echo "Found on registry!"
               break

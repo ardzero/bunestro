@@ -1,8 +1,9 @@
 name: Renovate notify
 
-# Renovate pushes with your own PAT, and GitHub never notifies you about your
-# own activity. This posts a comment as github-actions[bot] that @mentions the
-# repo owner, so an Astro major update reliably reaches your inbox.
+# Renovate already assigns Astro major PRs to you, but an assignment is easy to
+# miss among routine dependency notifications. This posts a comment as
+# github-actions[bot] that @mentions the repo owner, so an Astro major update
+# reliably reaches your inbox.
 
 on:
   pull_request:
