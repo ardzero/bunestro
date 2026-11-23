@@ -1,58 +1,10 @@
 {
 	$schema: "https://docs.renovatebot.com/renovate-schema.json",
-	extends: [
-		"config:recommended",
-		":configMigration",
-		"helpers:pinGitHubActionDigestsToSemver",
-	],
-
-	// Runs via .github/workflows/renovate.yml (self-hosted, free on public repos)
-	// as the `bunestro-renovate` GitHub App. See .github/RENOVATE.md.
-	// New PRs only open before 06:00 UTC on Mondays; the 4-hourly runs in between
-	// only automerge, act on Dependency Dashboard checkboxes, and open security
-	// fixes (which ignore the schedule).
-	timezone: "Etc/UTC",
-	schedule: ["before 6am on monday"],
-
-	labels: ["dependencies"],
-
-	// Exact pins stay exact, ^ranges stay ^ with their minimum bumped.
-	rangeStrategy: "bump",
-
-	// Supply-chain safety: wait before adopting brand-new npm releases.
-	minimumReleaseAge: "3 days",
-	internalChecksFilter: "strict",
-
-	// Renovate merges itself once every check passes (no branch protection needed).
-	platformAutomerge: false,
-
-	osvVulnerabilityAlerts: true,
-	vulnerabilityAlerts: {
-		labels: ["dependencies", "security"],
-	},
-
-	lockFileMaintenance: {
-		enabled: true,
-		automerge: true,
-		schedule: ["before 6am on monday"],
-	},
+	// Shared weekly policy and the Sora runner live in ardzero/sora-renovate.
+	// See .github/RENOVATE.md.
+	extends: ["github>ardzero/sora-renovate:weekly"],
 
 	packageRules: [
-		{
-			description: "Batch all non-major npm updates into one weekly PR and automerge it once CI passes",
-			matchManagers: ["bun", "npm"],
-			matchUpdateTypes: ["minor", "patch", "pin", "digest"],
-			groupName: "non-major dependencies",
-			groupSlug: "non-major",
-			automerge: true,
-		},
-		{
-			description: "Major npm updates always need manual review",
-			matchManagers: ["bun", "npm"],
-			matchUpdateTypes: ["major"],
-			automerge: false,
-			addLabels: ["major"],
-		},
 		{
 			description: "Astro major: core and official integrations move together, never automerge; the label triggers a notification (.github/workflows/renovate-notify.yml)",
 			matchPackageNames: ["astro", "@astrojs/**"],
@@ -67,49 +19,9 @@
 			],
 		},
 		{
-			description: "Batch GitHub Actions and workflow Node.js updates into one PR; non-major updates automerge, majors get their own PR for review",
-			matchManagers: ["github-actions", "custom.regex"],
-			groupName: "GitHub Actions",
-			groupSlug: "github-actions",
-		},
-		{
-			matchManagers: ["github-actions", "custom.regex"],
-			matchUpdateTypes: ["minor", "patch", "pin", "digest"],
-			automerge: true,
-		},
-		{
-			description: 'Node.js in workflows is tracked by the custom regex manager below (keeps the major-only "26" format), not by the github-actions manager',
-			matchManagers: ["github-actions"],
-			matchDepNames: ["node"],
-			enabled: false,
-		},
-		{
-			description: "Only move workflow Node.js between even (LTS) majors, keeping the major-only format",
-			matchManagers: ["custom.regex"],
-			matchDatasources: ["node-version"],
-			rangeStrategy: "replace",
-			allowedVersions: "/^v?\\d*[02468](\\.|$)/",
-		},
-		{
-			description: "`engines.node` is the minimum Node.js users need, a deliberate support decision; don't raise it on every Node release",
-			matchDepTypes: ["engines"],
-			enabled: false,
-		},
-		{
 			description: "Wrapper's create-bunestro dependency is synced by the publish workflow",
 			matchFileNames: ["packages/bunestro-wrapper/**"],
 			enabled: false,
-		},
-	],
-
-	customManagers: [
-		{
-			customType: "regex",
-			description: 'Track the major-only Node.js version in workflows (`node-version: "26"`)',
-			managerFilePatterns: ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
-			matchStrings: ['node-version: "(?<currentValue>\\d+)"'],
-			depNameTemplate: "node",
-			datasourceTemplate: "node-version",
 		},
 	],
 }
