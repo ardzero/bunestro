@@ -39,7 +39,7 @@
 		"runtime": true
 	},
 	"devDependencies": {
-		"@types/bun": "^1.4.2",
+		"@types/bun": "^1.4.5",
 		"baseline-browser-mapping": "^2.11.23",
 		"prettier": "^3.9.6",
 		"prettier-plugin-astro": "^0.14.1",
