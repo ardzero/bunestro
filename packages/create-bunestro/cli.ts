@@ -40,12 +40,55 @@ interface CliArguments {
     install?: boolean;
     cursor?: boolean;
     vscode?: boolean;
+    t3?: boolean;
     h?: boolean;
     v?: boolean;
 }
 
 type PackageManager = "bun" | "pnpm" | "yarn" | "npm";
-type EditorChoice = "cursor" | "vscode" | "skip" | null;
+type EditorId = "cursor" | "vscode" | "t3";
+type EditorChoice = EditorId | "skip" | null;
+
+type EditorConfig = {
+    name: string;
+    command: string;
+    args: string[];
+    getInstallHint: () => string;
+};
+
+const getCodeEditorInstallHint = (editorName: string, editorCommand: string): string => {
+    if (process.platform === "darwin") {
+        return `To add it, open ${editorName}, press Cmd+Shift+P, run "Shell Command: Install '${editorCommand}' command in PATH", then restart your terminal.`;
+    }
+
+    if (process.platform === "win32") {
+        return `To add it, reinstall ${editorName} with the "Add to PATH" option checked, then restart your terminal.`;
+    }
+
+    return `To add it, make sure ${editorName} is installed and its \`${editorCommand}\` launcher is in your PATH, then restart your terminal.`;
+};
+
+const EDITORS: Record<EditorId, EditorConfig> = {
+    cursor: {
+        name: "Cursor",
+        command: "cursor",
+        args: ["."],
+        getInstallHint: () => getCodeEditorInstallHint("Cursor", "cursor"),
+    },
+    vscode: {
+        name: "VS Code",
+        command: "code",
+        args: ["."],
+        getInstallHint: () => getCodeEditorInstallHint("VS Code", "code"),
+    },
+    t3: {
+        name: "T3 Code",
+        command: "t3",
+        args: ["app", "."],
+        getInstallHint: () =>
+            "To add it, install the T3 Code desktop app and open it once (it installs the `t3` command), then restart your terminal.",
+    },
+};
 
 function slugifyPackageName(name: string): string {
     const slug = name
@@ -135,6 +178,7 @@ function showHelp(): void {
     console.log(`  ${color.cyan("--no-install")}           Skip dependency installation`);
     console.log(`  ${color.cyan("--cursor")}               Open project in Cursor after creation`);
     console.log(`  ${color.cyan("--vscode")}               Open project in VS Code after creation`);
+    console.log(`  ${color.cyan("--t3")}                   Open project in T3 Code after creation`);
     console.log(`  ${color.cyan("-h, --help")}             Show this help message`);
     console.log(`  ${color.cyan("-v, --version")}          Show version number`);
 
@@ -167,6 +211,10 @@ const argv = yargs(hideBin(process.argv))
     .option("vscode", {
         type: "boolean",
         description: "Open project in VS Code after creation",
+    })
+    .option("t3", {
+        type: "boolean",
+        description: "Open project in T3 Code after creation",
     })
     .option("h", {
         alias: "help",
@@ -582,12 +630,15 @@ async function main(): Promise<void> {
         editorChoice = "cursor";
     } else if (argv.vscode) {
         editorChoice = "vscode";
+    } else if (argv.t3) {
+        editorChoice = "t3";
     } else if (!argv.y) {
         const editorResponse = await p.select({
             message: "Open project in editor?",
             options: [
                 { value: "cursor", label: "Cursor" },
                 { value: "vscode", label: "VS Code" },
+                { value: "t3", label: "T3 Code", hint: "t3 app" },
                 { value: "skip", label: "Skip" },
             ],
             initialValue: "cursor",
@@ -601,26 +652,32 @@ async function main(): Promise<void> {
     }
 
     if (editorChoice && editorChoice !== "skip") {
-        const editor = editorChoice === "vscode" ? "code" : "cursor";
-        const editorName = editorChoice === "vscode" ? "VS Code" : "Cursor";
+        const { name: editorName, command: editor, args: editorArgs, getInstallHint } = EDITORS[editorChoice];
+        const editorCommandLine = [editor, ...editorArgs].join(" ");
 
         try {
-            await execa(editor, ["."], {
+            await execa(editor, editorArgs, {
                 cwd: useCurrentDir ? process.cwd() : resolve(process.cwd(), projectName),
             });
             p.log.success(`Opened in ${editorName}`);
         } catch (error: any) {
-            p.log.warn(`Could not open ${editorName}`);
+            const isMissingCli = error?.code === "ENOENT";
 
-            if (
-                error.message.includes("not found") ||
-                error.message.includes("command not found")
-            ) {
-                p.log.info(`${editorName} CLI is not installed or not in PATH.`);
-                if (!useCurrentDir) {
-                    p.log.info(`You can open the project manually: cd ${projectName}`);
-                }
+            if (isMissingCli) {
+                p.log.warn(
+                    `Could not open ${editorName}: the \`${editor}\` command was not found in your PATH.`,
+                );
+                p.log.info(getInstallHint());
+            } else {
+                const reason = String(error?.shortMessage ?? error?.message ?? error).trim();
+                p.log.warn(`Could not open ${editorName}: \`${editorCommandLine}\` failed.`);
+                p.log.info(`Reason: ${reason}`);
             }
+
+            const openCommand = useCurrentDir
+                ? editorCommandLine
+                : `cd ${projectName} && ${editorCommandLine}`;
+            p.log.info(`Open the project manually with ${color.cyan(openCommand)}`);
         }
     }
 
