@@ -17,7 +17,7 @@
         "astro": "7.4.7",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "lite-youtube-embed": "^0.3.4",
+        "lite-youtube-embed": "^0.4.0",
         "lucide-react": "^0.545.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
@@ -515,7 +515,7 @@
 
     "lightningcss-win32-x64-msvc": ["lightningcss-win32-x64-msvc@1.33.0", "", { "os": "win32", "cpu": "x64" }, "sha512-OlEICDx/Xl0FqSp4bry8zFnCvGpig3Gl4gCquvYwHuqJKEC1+n9NgDniFvqHGmMv1ZkqDJrDqKKSykTDX+ehuA=="],
 
-    "lite-youtube-embed": ["lite-youtube-embed@0.3.4", "", {}, "sha512-aXgxpwK7AIW58GEbRzA8EYaY4LWvF3FKak6B9OtSJmuNyLhX2ouD4cMTxz/yR5HFInhknaYd2jLWOTRTvT8oAw=="],
+    "lite-youtube-embed": ["lite-youtube-embed@0.4.0", "", {}, "sha512-82CmQVLWv1P1FNUWgiXJtbkBQbyF8UQB0s0F+pSegbcx53uylX4kgJ6QJsXseVHzNtVxa9t8yjryA2B9sTkFKg=="],
 
     "lru-cache": ["lru-cache@11.5.3", "", {}, "sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg=="],
 
