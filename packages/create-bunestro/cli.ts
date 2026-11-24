@@ -16,6 +16,7 @@ const PATHS_TO_REMOVE: string[] = [
     "src/pages/test.astro",
     "packages",
     ".github/workflows",
+    ".github/scripts/vercel-ignore.sh",
 ];
 // Whether to rename the package.json name to the project name.
 const RENAME_PACKAGE_NAME = true;
